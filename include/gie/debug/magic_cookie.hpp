@@ -9,6 +9,9 @@
 #pragma once
 //================================================================================================================================================]
 #include <boost/mpl/int.hpp>
+#include <boost/cstdint.hpp>
+
+#include <cassert>
 //================================================================================================================================================]
 namespace gie {
 
@@ -28,7 +31,7 @@ namespace gie {
 			#endif
 		}
 
-		void is_cookie_valid(){
+		inline void is_cookie_valid(){
 			assert( m_debug_cookie == cookie );
 		}
 
