@@ -10,6 +10,7 @@
 //================================================================================================================================================
 #include "debugger_break.hpp"
 
+#include <boost/system/system_error.hpp>
 #include <boost/exception/all.hpp>
 #include <boost/preprocessor/stringize.hpp>
 
@@ -83,6 +84,9 @@
 #define GIE_CHECK(x) do{ if(!(x)) { ::gie::debug::brk(); GIE_THROW(::gie::exception::condition_check_failed() << ::gie::exception::condition_check_expr_einfo( BOOST_PP_STRINGIZE(x) ));} } while(false)
 #define GIE_CHECK_EX(x, e) if(!(x)) GIE_THROW(e << ::gie::exception::condition_check_expr_einfo( BOOST_PP_STRINGIZE(x) ) )
 
+#define GIE_CHECK_ERRNO(x) if(!(x)) GIE_THROW(::gie::exception::condition_check_failed() << ::gie::exception::condition_check_expr_einfo( BOOST_PP_STRINGIZE(x) ) << ::gie::exception::error_code_einfo(::boost::system::error_code(errno, ::boost::system::system_category())  ) )
+
+
 #define GIE_BT_BEGIN try{
 #define GIE_BT_END	\
 			} catch (boost::exception& e){	\
@@ -110,6 +114,7 @@ namespace gie {
     		return os;
     	}
 
+        typedef boost::error_info< struct tag_error_code_einfo, boost::system::error_code> error_code_einfo;
         typedef boost::error_info< struct tag_str_einfo, std::string > error_str_einfo;
         typedef boost::error_info< struct tag_condition_check_expr_einfo, std::string > condition_check_expr_einfo;
         typedef boost::error_info< struct tag_bt_einfo, bt_t > bt_einfo;

@@ -21,7 +21,13 @@ namespace gie {
             fun();
             
         } catch( boost::exception const & e ) {
-            GIE_LOG( "\n======= uncaught exception =======\n" << diagnostic_information(e) );
+            auto const einfo = boost::get_error_info<gie::exception::error_code_einfo>(e);
+
+            if(einfo){
+                GIE_LOG( "\n======= uncaught exception =======\n" << diagnostic_information(e) << "\n" << "error code message: " << einfo->message() );
+            } else {
+                GIE_LOG( "\n======= uncaught exception =======\n" << diagnostic_information(e));
+            }
             return EXIT_FAILURE;
         } catch( std::exception const & e ) {
             GIE_LOG( "\n======= uncaught exception =======\n" << typeid(e).name() << "\n" << e.what() );
