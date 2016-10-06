@@ -119,7 +119,7 @@ namespace gie { namespace logger { namespace impl {
         do{ try {               \
                 std::ostringstream ostr;        \
                 ::gie::logger::impl::ostream_wrapper_t(ostr) << "LOG: " << GIE_IMPL_LOGGER_LOG_TIME GIE_IMPL_LOGGER_LOG_TID  "["<<file<<":"<<line<<"] " << GIE_LOG_OPEN_TAG <<  msg << GIE_LOG_CLOSE_TAG << "\n"; \
-                fprintf( stderr, ostr.str().c_str() );  \
+                std::fputs( ostr.str().c_str(), stderr );  \
                 } catch(...) { ::gie::debug::exception_while_formatting_logging_message(); } \
         } while(false) \
         /**/

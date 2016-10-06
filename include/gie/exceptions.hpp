@@ -131,7 +131,7 @@ namespace gie {
 
             template <class T> void log_exception_invokation(T const& e ) {
                
-            	fprintf(stderr, ( boost::diagnostic_information(e) +"\n").c_str() );
+            	fprintf(stderr, "%s\n", boost::diagnostic_information(e).c_str() );
 
                 //log4cplus::Logger const logger = log4cplus::Logger::getInstance("sd.debug");
                 //LOG4CPLUS_DEBUG(logger, diag_info);
