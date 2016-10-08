@@ -81,10 +81,21 @@
 	/*assert(!"UNEXPECTED");*/	\
 	GIE_THROW(::gie::exception::unexpected() << sd::exception::error_wstr_einfo(msg))
 
-#define GIE_CHECK(x) do{ if(!(x)) { ::gie::debug::brk(); GIE_THROW(::gie::exception::condition_check_failed() << ::gie::exception::condition_check_expr_einfo( BOOST_PP_STRINGIZE(x) ));} } while(false)
-#define GIE_CHECK_EX(x, e) if(!(x)) GIE_THROW(e << ::gie::exception::condition_check_expr_einfo( BOOST_PP_STRINGIZE(x) ) )
+#define GIE_CHECK_EX(x, e)      \
+    do { if(!(x)) {             \
+        ::gie::debug::brk();    \
+        GIE_THROW(e << ::gie::exception::condition_check_expr_einfo( BOOST_PP_STRINGIZE(x) ) ); \
+    } } while (false)           \
+    /**/
+#define GIE_CHECK(x) GIE_CHECK_EX(x, ::gie::exception::condition_check_failed() )
 
-#define GIE_CHECK_ERRNO(x) if(!(x)) GIE_THROW(::gie::exception::condition_check_failed() << ::gie::exception::condition_check_expr_einfo( BOOST_PP_STRINGIZE(x) ) << ::gie::exception::error_code_einfo(::boost::system::error_code(errno, ::boost::system::system_category())  ) )
+#define GIE_CHECK_ERRNO_EX(x,e)             \
+    do{ if(!(x)) {                          \
+        auto const saved_errno = errno;     \
+        GIE_THROW(e << ::gie::exception::condition_check_expr_einfo( BOOST_PP_STRINGIZE(x) ) << ::gie::exception::error_code_einfo(::boost::system::error_code(saved_errno, ::boost::system::system_category())  ) );  \
+    } } while (false)                       \
+    /**/
+#define GIE_CHECK_ERRNO(x) GIE_CHECK_ERRNO_EX(x, ::gie::exception::condition_check_failed() )
 
 
 #define GIE_BT_BEGIN try{

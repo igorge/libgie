@@ -13,33 +13,55 @@
 #include <boost/exception/diagnostic_information.hpp>
 //================================================================================================================================================
 namespace gie {
-    
-    template <class MainFun>
-    int main(MainFun const& fun){
-        try {
-            
-            fun();
-            
-        } catch( boost::exception const & e ) {
-            auto const einfo = boost::get_error_info<gie::exception::error_code_einfo>(e);
 
-            if(einfo){
-                GIE_LOG( "\n======= uncaught exception =======\n" << diagnostic_information(e) << "\n" << "error code message: " << einfo->message() );
-            } else {
-                GIE_LOG( "\n======= uncaught exception =======\n" << diagnostic_information(e));
-            }
+    namespace impl {
+
+        inline
+        int safe_main_exception_filter(){
+            try {
+                throw;
+            } catch( boost::exception const & e ) {
+                auto const einfo = boost::get_error_info<gie::exception::error_code_einfo>(e);
+
+                if(einfo){
+                    GIE_LOG( "\n======= uncaught exception =======\n" << diagnostic_information(e) << "\n" << "error code message: " << einfo->message() );
+                } else {
+                    GIE_LOG( "\n======= uncaught exception =======\n" << diagnostic_information(e));
+                }
+            } catch( std::exception const & e ) {
+                GIE_LOG( "\n======= uncaught exception =======\n" << typeid(e).name() << "\n" << e.what() );
+            } /*catch( ... ) {
+                GIE_LOG( "\n======= unknown uncaught exception =======" );
+                return EXIT_FAILURE;
+            } */
+
             return EXIT_FAILURE;
-        } catch( std::exception const & e ) {
-            GIE_LOG( "\n======= uncaught exception =======\n" << typeid(e).name() << "\n" << e.what() );
-            return EXIT_FAILURE;
-        } /*catch( ... ) {
-            GIE_LOG( "\n======= unknown uncaught exception =======" );
-            return EXIT_FAILURE;
-        } */   
+
+        }
+    }
+
+    template <class MainFun>
+    typename std::enable_if< std::is_same<void, typename std::result_of<MainFun()>::type >::value, int>::type
+    main(MainFun const& fun){
+        try {
+            fun();
+        } catch(...){
+            return impl::safe_main_exception_filter();
+        }
         
         return EXIT_SUCCESS;
     }
-    
+
+    template <class MainFun>
+    typename std::enable_if< std::is_integral<typename std::result_of<MainFun()>::type >::value, int>::type
+    main(MainFun const& fun){
+        try {
+            return fun();
+        } catch(...){
+            return impl::safe_main_exception_filter();
+        }
+    }
+
 }
 //================================================================================================================================================
 #endif
