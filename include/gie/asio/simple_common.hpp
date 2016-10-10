@@ -14,8 +14,11 @@
 #include <boost/asio.hpp>
 #include <boost/optional.hpp>
 #include <boost/thread.hpp>
+#include <boost/shared_ptr.hpp>
 //================================================================================================================================================
 namespace gie {
+
+	typedef boost::shared_ptr<boost::asio::io_service> shared_io_service_t;
 
 	template <class Self>
 	struct default_efilter_log_and_silence_exception {

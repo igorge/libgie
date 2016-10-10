@@ -8,6 +8,7 @@
 //================================================================================================================================================
 #pragma once
 //================================================================================================================================================
+#include "log/debug.hpp"
 #include "debugger_break.hpp"
 
 #include <boost/system/system_error.hpp>
@@ -142,10 +143,8 @@ namespace gie {
 
             template <class T> void log_exception_invokation(T const& e ) {
                
-            	fprintf(stderr, "%s\n", boost::diagnostic_information(e).c_str() );
+            	GIE_DEBUG_LOG("THROW TRACE: " << boost::diagnostic_information(e) );
 
-                //log4cplus::Logger const logger = log4cplus::Logger::getInstance("sd.debug");
-                //LOG4CPLUS_DEBUG(logger, diag_info);
             }
 
         }

@@ -9,6 +9,8 @@
 #pragma once
 //================================================================================================================================================
 #include "simple_common.hpp"
+
+#include "gie/util-scope-exit.hpp"
 //================================================================================================================================================
 namespace gie {
 
@@ -17,7 +19,14 @@ namespace gie {
 		: EfilterLogAndSilence< simple_asio_service_t<EfilterLogAndSilence> >
 	{
 
-		boost::asio::io_service& service(){ return m_service; }
+		boost::asio::io_service& service()const{
+            assert(m_service != nullptr);
+			return *m_service;
+		}
+
+        shared_io_service_t shared_service()const{
+            return m_service;
+        }
 
 		void stop_sync(){
 			GIE_DEBUG_TRACE();
@@ -27,20 +36,14 @@ namespace gie {
 
 		template <class Fun>
 		void post(Fun&& fun){
-
-			this->service().post([this, fun]{
-				try{
-					fun();
-				}catch(...){
-					this->efilter_log_and_silence_exception_();
-				}
-			});
-
+			this->service().post(std::forward<Fun>(fun));
 		}
 
-		simple_asio_service_t()
-			: m_alive( boost::ref(m_service) )
-        	, m_main_worker( [this]()->void{ try { return this->worker_main_(); } catch(...){ this->efilter_log_and_silence_exception_(); } } )
+		template <class T>
+        explicit simple_asio_service_t(T&& io)
+			: m_service( std::forward<T>(io) )
+            , m_alive( boost::ref(service()) )
+        	, m_main_worker( [this]()->void{ worker_main_(); } )
 		{
 		}
 
@@ -58,14 +61,23 @@ namespace gie {
 		}
 
 	private:
-        boost::asio::io_service m_service;
+		shared_io_service_t m_service;
         boost::optional<boost::asio::io_service::work>   m_alive;
         boost::thread   m_main_worker;
 
         void worker_main_(){
         	GIE_DEBUG_LOG("async thread started");
-            m_service.run();
-            GIE_DEBUG_LOG("async thread about to exit");
+            GIE_DEBUG_SCOPE_EXIT_LOG("async thread about to exit");
+
+            for(;;){
+                try {
+                    service().run();
+                    return;
+                } catch(...){
+                    this->efilter_log_and_silence_exception_();
+                }
+            }
+
         }
 
         void shut_down_service_(){
