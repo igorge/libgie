@@ -118,9 +118,13 @@ namespace gie { namespace sio2 {
         void serialize_out(as_t<tag::uint32_le, T>&& v, WriteStream& write_stream){
             impl::require_integral<T>();
             static_assert(!std::numeric_limits<T>::is_signed);
+            static_assert(std::numeric_limits<T>::digits>=32);
 
-
-            //write_stream.write(v.value);
+            constexpr auto r_shift = (std::numeric_limits<T>::digits-8);
+            write_stream.write( (v.value << (std::numeric_limits<T>::digits-8)) >> r_shift  );
+            write_stream.write( (v.value << (std::numeric_limits<T>::digits-16)) >> r_shift );
+            write_stream.write( (v.value << (std::numeric_limits<T>::digits-24)) >> r_shift );
+            write_stream.write(  v.value >> r_shift );
         }
 
 

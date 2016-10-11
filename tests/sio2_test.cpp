@@ -105,6 +105,31 @@ BOOST_AUTO_TEST_CASE( test_push_back_writer5 )
 
     os(sio2::as<sio2::tag::uint32_le>(v));
 
+    BOOST_CHECK( container.size() == 4 );
+    BOOST_CHECK( container.at(0) == 1 );
+    BOOST_CHECK( container.at(1) == 0 );
+    BOOST_CHECK( container.at(2) == 0 );
+    BOOST_CHECK( container.at(3) == 0 );
+
+}
+
+
+BOOST_AUTO_TEST_CASE( test_push_back_writer6 )
+{
+    typedef std::vector<unsigned char> container_t;
+
+    container_t container;
+    sio2::push_back_writer_t <container_t> os{container};
+
+    unsigned int v = 0xfafbfcfd;
+
+    os(sio2::as<sio2::tag::uint32_le>(v));
+
+    BOOST_CHECK( container.size() == 4 );
+    BOOST_CHECK( container.at(0) == 0xfd );
+    BOOST_CHECK( container.at(1) == 0xfc );
+    BOOST_CHECK( container.at(2) == 0xfb );
+    BOOST_CHECK( container.at(3) == 0xfa );
 
 }
 
