@@ -28,9 +28,10 @@ endif()
 
 ### UT
 set(TESTS_SOURCES
-    "tests/ut_next_power_of_two.cpp")
+    "tests/ut_next_power_of_two.cpp"
+    "tests/sio2_test.cpp")
     
-find_package (Boost COMPONENTS unit_test_framework REQUIRED)
+find_package (Boost COMPONENTS unit_test_framework system date_time REQUIRED)
     
 set(TEST test_${proj_exe_name})
 add_executable (${TEST} ${TESTS_SOURCES})
@@ -40,6 +41,6 @@ add_test (${TEST} ${TEST})
 ###
 
 
-include_directories(${Boost_INCLUDE_DIRS})
+include_directories(${Boost_INCLUDE_DIRS} ${PROJECT_SOURCE_DIR}/include)
 add_library(${proj_exe_name} ${proj_sources} ${proj_headers_moc})
 target_link_libraries(${proj_exe_name} ${QT_LIBRARIES})
