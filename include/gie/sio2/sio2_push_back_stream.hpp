@@ -17,7 +17,7 @@ namespace gie { namespace sio2 {
         struct push_back_writer_t {
 
             typedef typename ContainerT::value_type value_type;
-            typedef unsigned char octet_type;
+            typedef std::uint_fast8_t octet_type;
 
             template <class T>
             void write(T const& value){

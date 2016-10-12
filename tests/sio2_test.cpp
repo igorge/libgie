@@ -5,8 +5,8 @@
 //================================================================================================================================================
 //#include "stdafx.h"
 //================================================================================================================================================
-
-#include "gie/sio2/sio2_push_back_write_stream.hpp"
+#include "gie/sio2/sio2_range_reader.hpp"
+#include "gie/sio2/sio2_push_back_stream.hpp"
 #include "gie/sio2/sio2_core.hpp"
 #include "gie/exceptions.hpp"
 
@@ -17,7 +17,7 @@ BOOST_AUTO_TEST_SUITE( sio2_test_suite )
 using namespace gie;
 
 
-BOOST_AUTO_TEST_CASE( test_as_value )
+BOOST_AUTO_TEST_CASE( sio_as_t_test_as_value )
 {
     auto const magic = 1024;
 
@@ -27,7 +27,7 @@ BOOST_AUTO_TEST_CASE( test_as_value )
     BOOST_CHECK(v.value == magic);
 
     v.value = 23;
-    BOOST_CHECK( v.value == 23);
+    BOOST_CHECK( data == 23);
 
 }
 
@@ -38,6 +38,8 @@ BOOST_AUTO_TEST_CASE( test_unsigned_fit_signed )
     BOOST_CHECK( static_cast<int>(v2)== -1 ); //not guaranteed by c++ standard
 }
 
+
+
 BOOST_AUTO_TEST_CASE( test_push_back_writer )
 {
     typedef std::vector<signed char> container_t;
@@ -47,7 +49,6 @@ BOOST_AUTO_TEST_CASE( test_push_back_writer )
     os.write(static_cast<unsigned char>(std::numeric_limits<unsigned char>::max()));
 
     BOOST_CHECK( container.at(0) == -1);
-
 }
 
 
@@ -130,6 +131,56 @@ BOOST_AUTO_TEST_CASE( test_push_back_writer6 )
     BOOST_CHECK( container.at(1) == 0xfc );
     BOOST_CHECK( container.at(2) == 0xfb );
     BOOST_CHECK( container.at(3) == 0xfa );
+
+}
+
+
+
+
+
+BOOST_AUTO_TEST_CASE( test_range_reader_t_empty )
+{
+    typedef std::vector<signed char> container_t;
+
+    container_t container;
+    sio2::range_reader_t<container_t> is{container};
+
+    BOOST_CHECK_THROW(is.read(), sio2::exception::underflow);
+
+}
+
+BOOST_AUTO_TEST_CASE( test_range_reader_t )
+{
+    typedef std::vector<signed char> container_t;
+
+    container_t container = {-1, 1};
+    sio2::range_reader_t<container_t> is{container};
+
+    auto const v1 = is.read();
+    BOOST_CHECK(v1 == std::numeric_limits<unsigned char>::max());
+
+    auto const v2 = is.read();
+    BOOST_CHECK(v2 == 1);
+
+    BOOST_CHECK_THROW(is.read(), sio2::exception::underflow);
+
+}
+
+
+BOOST_AUTO_TEST_CASE( test_range_reader_t_int_base )
+{
+    typedef std::vector<int> container_t;
+
+    container_t container = {-1, 1};
+    sio2::range_reader_t<container_t> is{container};
+
+    auto const v1 = is.read();
+    BOOST_CHECK(v1 == std::numeric_limits<unsigned char>::max());
+
+    auto const v2 = is.read();
+    BOOST_CHECK(v2 == 1);
+
+    BOOST_CHECK_THROW(is.read(), sio2::exception::underflow);
 
 }
 

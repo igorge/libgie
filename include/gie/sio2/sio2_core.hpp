@@ -74,7 +74,17 @@ namespace gie { namespace sio2 {
                 static_assert(bits_count<T>() >=8, "must contain at least 8 bits");
             }
 
+            template <class T>
+            constexpr void require_stream_source_octet_storage(){
+                require_integral<T>();
+                static_assert(bits_count<T>() >=8, "must contain at least 8 bits");
+            }
 
+
+
+            //
+            // force_truncate_octet
+            //
             template <class T>
             typename std::enable_if<bits_count<T>()==8, T>::type
              force_truncate_octet(T value){
@@ -108,12 +118,14 @@ namespace gie { namespace sio2 {
 
 
 
+        // out -- octet
         template <class WriteStream, class T>
         void serialize_out(as_t<tag::octet, T>&& v, WriteStream& write_stream){
             impl::require_octet<T>();
             write_stream.write(v.value);
         }
 
+        // out -- uint32_le
         template <class WriteStream, class T>
         void serialize_out(as_t<tag::uint32_le, T>&& v, WriteStream& write_stream){
             impl::require_integral<T>();
