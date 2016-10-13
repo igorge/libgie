@@ -135,6 +135,24 @@ BOOST_AUTO_TEST_CASE( test_push_back_writer6 )
 }
 
 
+BOOST_AUTO_TEST_CASE( test_push_back_writer_uint64_t )
+{
+    typedef std::vector<unsigned char> container_t;
+
+    container_t container;
+    sio2::push_back_writer_t <container_t> os{container};
+
+    std::uint64_t v = 0xfafbfcfd;
+
+    os(sio2::as<sio2::tag::uint32_le>(v));
+
+    BOOST_CHECK( container.size() == 4 );
+    BOOST_CHECK( container.at(0) == 0xfd );
+    BOOST_CHECK( container.at(1) == 0xfc );
+    BOOST_CHECK( container.at(2) == 0xfb );
+    BOOST_CHECK( container.at(3) == 0xfa );
+
+}
 
 
 
@@ -184,6 +202,23 @@ BOOST_AUTO_TEST_CASE( test_range_reader_t_int_base )
 
 }
 
+
+
+
+BOOST_AUTO_TEST_CASE( test_range_reader_t_uint32_le )
+{
+    typedef std::vector<unsigned char> container_t;
+
+    container_t container={0xfd, 0xfc, 0xfb, 0xfa};
+    sio2::range_reader_t<container_t> is{container};
+
+    unsigned int v = 0;
+
+    is(sio2::as<sio2::tag::uint32_le>(v));
+
+    BOOST_CHECK(v == 0xfafbfcfd);
+    BOOST_CHECK_THROW(is.read(), sio2::exception::underflow);
+}
 
 //================================================================================================================================================
 BOOST_AUTO_TEST_SUITE_END()

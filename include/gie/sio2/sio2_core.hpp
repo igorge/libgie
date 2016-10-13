@@ -11,6 +11,7 @@
 #include <type_traits>
 #include <cinttypes>
 #include <limits>
+#include <utility>
 //================================================================================================================================================
 namespace gie { namespace sio2 {
 
@@ -125,6 +126,14 @@ namespace gie { namespace sio2 {
             write_stream.write(v.value);
         }
 
+        // in -- octet
+        template <class ReadStream, class T>
+        void serialize_in(as_t<tag::octet, T>&& v, ReadStream& read_stream){
+            impl::require_octet<T>();
+
+            v.value = read_stream.read();
+        }
+
         // out -- uint32_le
         template <class WriteStream, class T>
         void serialize_out(as_t<tag::uint32_le, T>&& v, WriteStream& write_stream){
@@ -136,28 +145,23 @@ namespace gie { namespace sio2 {
             write_stream.write( (v.value << (std::numeric_limits<T>::digits-8)) >> r_shift  );
             write_stream.write( (v.value << (std::numeric_limits<T>::digits-16)) >> r_shift );
             write_stream.write( (v.value << (std::numeric_limits<T>::digits-24)) >> r_shift );
-            write_stream.write(  v.value >> r_shift );
+            write_stream.write( (v.value << (std::numeric_limits<T>::digits-32)) >> r_shift );
         }
 
+        // in -- uint32_le
+        template <class ReadStream, class T>
+        void serialize_in(as_t<tag::uint32_le, T>&& v, ReadStream& read_stream){
+            impl::require_integral<T>();
+            static_assert(!std::numeric_limits<T>::is_signed);
+            static_assert(std::numeric_limits<T>::digits>=32);
 
+            T const o1 = read_stream.read();
+            T const o2 = read_stream.read();
+            T const o3 = read_stream.read();
+            T const o4 = read_stream.read();
 
-//        template <class TTag, class ReadStream, class T>
-//        typename std::enable_if<std::is_same<TTag, tag::octet_type>::value , void>::type
-//        serialize_in(T& v, ReadStream& op){
-//            typedef typename ReadStream::octet_type octet_type;
-//            octet_type const value = op.read();
-//
-//            static_assert(!std::numeric_limits<octet_type>::is_signed, "octet must not be signed");
-//            static_assert(std::numeric_limits<octet_type>::digits>=8, "octet must contain atleast 8 bits");
-//
-//            assert(std::numeric_limits<T>::digits==8 || (value & ~static_cast<octet_type>(octet_mask))==0 );
-//
-//            static_assert(!std::numeric_limits<T>::is_signed, "target octet type must not be signed");
-//            static_assert(std::numeric_limits<T>::digits>=8, "target octet type must contain atleast 8 bits");
-//
-//            v = static_cast<T>( value );
-//        }
-
+            v.value =  ( o1 | (o2<<8) | (o3<<16) | (o4<<24) );
+        };
 
 
     }}

@@ -44,8 +44,6 @@ namespace gie { namespace sio2 {
                 return *this;
             }
 
-            void test(iterator_type i){}
-
             template <class RangeT>
             range_reader_t(RangeT const & range)
                 : m_current(range.cbegin())
