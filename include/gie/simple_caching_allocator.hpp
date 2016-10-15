@@ -30,7 +30,9 @@ namespace gie {
             assert (max_exponent<32);
             assert (min_exponent<max_exponent);
 
-            m_buckets.resize(bucket_idx_from_size_(m_max_exponent)+1);
+            auto const buckets = m_max_exponent-min_exponent+1;
+
+            m_buckets.resize(buckets);
 		}
 
         ~simple_caching_allocator(){

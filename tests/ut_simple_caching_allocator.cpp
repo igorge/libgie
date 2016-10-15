@@ -49,6 +49,16 @@ namespace gie {
             ptr2.reset();
             BOOST_TEST(alloc.m_buckets.at(0).size()==1);
 
+
+
+            BOOST_TEST(alloc.m_buckets.at(9).size()==0);
+            auto ptr3  = boost::shared_ptr<void>{alloc.allocate(8192), [&alloc](void* pointer){ alloc.deallocate(pointer, 8192); }};
+            BOOST_TEST(alloc.m_buckets.at(9).size()==0);
+
+            ptr3.reset();
+            BOOST_TEST(alloc.m_buckets.at(9).size()==1);
+
+
         }
 
         static void test3(simple_caching_allocator & alloc) {
