@@ -84,7 +84,7 @@ namespace gie {
     private:
 
         size_t size_from_bucket_idx_(unsigned int idx)const{
-            GIE_CHECK_EX(idx <= m_max_exponent - m_min_exponent, exception::out_of_range());
+            assert(idx <= m_max_exponent - m_min_exponent);
 
             auto const exp_size = idx + m_min_exponent;
             assert( exp_size < std::numeric_limits<size_t>::digits );

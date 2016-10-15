@@ -32,7 +32,6 @@ namespace gie {
             BOOST_TEST(alloc.size_from_bucket_idx_(1)==32);
             BOOST_TEST(alloc.size_from_bucket_idx_(9)==8192);
 
-            BOOST_CHECK_THROW(alloc.size_from_bucket_idx_(10), exception::out_of_range);
         }
 
 
