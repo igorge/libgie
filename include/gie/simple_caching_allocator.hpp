@@ -78,7 +78,7 @@ namespace gie {
                 int const idx = bucket_idx_from_size_(size);
                 if(idx==-1){
                     GIE_DEBUG_LOG("simple_caching_allocator: size "<<size<<" is to large for caching, deleting.");
-                    ::operator delete(pointer);
+                    do_deallocate(pointer, size);
                 } else {
                     //GIE_DEBUG_LOG("Caching size: "<<size<<"("<<size_from_bucket_idx_(idx)<<").");
                     assert(idx < m_buckets.size());
@@ -89,6 +89,10 @@ namespace gie {
                 ::operator delete(pointer);
                 GIE_UNEXPECTED_IN_DTOR();
             }
+        }
+
+        void do_deallocate(void* const pointer, size_t const size)const noexcept{
+            ::operator delete(pointer);
         }
 
     private:

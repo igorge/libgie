@@ -8,6 +8,7 @@
 //================================================================================================================================================
 #pragma once
 //================================================================================================================================================
+#include "gie/exceptions.hpp"
 #include <boost/thread/mutex.hpp>
 //================================================================================================================================================
 namespace gie {
@@ -26,8 +27,14 @@ namespace gie {
         }
 
         void deallocate(void* const pointer, size_t const size)noexcept {
-            boost::mutex::scoped_lock lock{m_mutex};
-            return m_allocator_.deallocate(pointer, size);
+            try{
+                boost::mutex::scoped_lock lock{m_mutex};
+                return m_allocator_.deallocate(pointer, size);
+            } catch (...){
+                GIE_UNEXPECTED_IN_DTOR();
+                m_allocator_.do_deallocate(pointer, size);
+            }
+
         }
 
     private:
