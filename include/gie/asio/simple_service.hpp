@@ -29,7 +29,7 @@ namespace gie {
         }
 
 		void stop_sync(){
-			GIE_DEBUG_TRACE();
+			GIE_DEBUG_TRACE_INOUT();
 			this->shut_down_service_();
             m_main_worker.join();
 		}
@@ -81,7 +81,7 @@ namespace gie {
         }
 
         void shut_down_service_(){
-
+			GIE_DEBUG_TRACE_INOUT();
 
         	if( m_alive ) {
                 GIE_DEBUG_LOG("shutting down");
