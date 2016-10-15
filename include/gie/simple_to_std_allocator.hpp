@@ -9,6 +9,8 @@
 #pragma once
 //================================================================================================================================================
 #include "log/debug.hpp"
+
+#include <type_traits>
 //================================================================================================================================================
 namespace gie {
 
@@ -37,17 +39,51 @@ namespace gie {
         }
 
         T* allocate(std::size_t n){
-            GIE_DEBUG_LOG("Allocating "<<n*sizeof( T )<< " bytes");
+            //GIE_DEBUG_LOG("Allocating "<<n*sizeof( T )<< " bytes");
 
             T * const p = static_cast< T* >( m_simple_allocator.allocate(n * sizeof( T )) );
             return p;
         }
 
         void deallocate(T* p, std::size_t n){
-            GIE_DEBUG_LOG("Deallocating "<<n*sizeof( T )<< " bytes");
+            //GIE_DEBUG_LOG("Deallocating "<<n*sizeof( T )<< " bytes");
 
             m_simple_allocator.deallocate(p,n * sizeof( T ));
         }
+
+
+        template <class TT, class... Args>
+        typename std::enable_if<!std::is_same<T,TT>::value, TT*>::type alloc_(Args&& ...args){
+            rebind<TT> alloc{*this};
+            TT* const ptr = alloc.allocate(1);
+
+            auto const tmp = new (ptr)TT{std::forward<Args>(args)...};
+            assert(ptr==tmp);
+
+            return tmp;
+        }
+
+        template <class TT, class... Args>
+        typename std::enable_if<std::is_same<T,TT>::value, TT*>::type alloc_(Args&& ...args){
+            TT* const ptr = this->allocate(1);
+
+            auto const tmp = new (ptr)TT{std::forward<Args>(args)...};
+            assert(ptr==tmp);
+
+            return tmp;
+        }
+
+        template <class TT>
+        typename std::enable_if<!std::is_same<T,TT>::value, void >::type dealloc_(TT* const p){
+            rebind<TT> alloc{*this};
+            alloc.deallocate(p, 1);
+        }
+
+        template <class TT>
+        typename std::enable_if<std::is_same<T,TT>::value, void >::type dealloc_(TT* const p){
+            this->deallocate(p, 1);
+        }
+
 
     private:
 

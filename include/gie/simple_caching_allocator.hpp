@@ -18,7 +18,6 @@ namespace gie {
 
 	struct simple_caching_allocator {
 
-
         friend class boost_test__simple_caching_allocator;
 
 		typedef void* pointer_type;
@@ -49,12 +48,14 @@ namespace gie {
 
 		  void* allocate(std::size_t const size){
 
+              //GIE_DEBUG_IF_LOG(m_alive_objects>1024, "WARNING: To many alive objects: "<<m_alive_objects);
+
               int const idx = bucket_idx_from_size_(size);
               if(idx==-1){
                   GIE_DEBUG_LOG("simple_caching_allocator: size "<<size<<" is to large for caching.");
                   return ::operator new(size);
               } else {
-                  assert(idx < m_buckets.size());
+                  assert(static_cast<size_t>(idx) < m_buckets.size());
 
                   if (m_buckets[idx].empty()){
                       auto const effective_size = size_from_bucket_idx_(idx);
@@ -74,6 +75,9 @@ namespace gie {
 		  }
 
         void deallocate(void* const pointer, size_t const size)noexcept {
+
+            //GIE_DEBUG_IF_LOG(m_alive_objects>1024, "WARNING: To many alive objects: "<<m_alive_objects);
+
             try {
                 int const idx = bucket_idx_from_size_(size);
                 if(idx==-1){
@@ -81,12 +85,12 @@ namespace gie {
                     do_deallocate(pointer, size);
                 } else {
                     //GIE_DEBUG_LOG("Caching size: "<<size<<"("<<size_from_bucket_idx_(idx)<<").");
-                    assert(idx < m_buckets.size());
+                    assert(static_cast<size_t>(idx) < m_buckets.size());
                     m_buckets[idx].push_back(pointer);
                     --m_alive_objects;
                 }
             } catch (...){
-                ::operator delete(pointer);
+                do_deallocate(pointer,size);
                 GIE_UNEXPECTED_IN_DTOR();
             }
         }
