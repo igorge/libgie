@@ -15,6 +15,7 @@
 //================================================================================================================================================
 namespace gie {
 
+
 	struct simple_caching_allocator {
 
 
@@ -36,6 +37,9 @@ namespace gie {
 		}
 
         ~simple_caching_allocator(){
+
+            assert(m_alive_objects==0);
+
             for (auto const & bucket:m_buckets){
                 for (auto&& pointer : bucket){
                     ::operator delete(pointer);
@@ -43,7 +47,7 @@ namespace gie {
             }
         }
 
-		  void* allocate(std::size_t size){
+		  void* allocate(std::size_t const size){
 
               int const idx = bucket_idx_from_size_(size);
               if(idx==-1){
@@ -54,11 +58,15 @@ namespace gie {
 
                   if (m_buckets[idx].empty()){
                       auto const effective_size = size_from_bucket_idx_(idx);
+                      GIE_DEBUG_LOG("Buckets empty for size: size "<<size<<"("<<effective_size<<").");
                       assert(effective_size>=size);
-                      return ::operator new(effective_size);
+                      auto const tmp = ::operator new(effective_size);
+                      ++m_alive_objects;
+                      return tmp;
                   } else {
                       auto const tmp = m_buckets[idx].back();
                       m_buckets[idx].resize(m_buckets[idx].size()-1);
+                      ++m_alive_objects;
                       return tmp;
                   }
               }
@@ -72,8 +80,10 @@ namespace gie {
                     GIE_DEBUG_LOG("simple_caching_allocator: size "<<size<<" is to large for caching, deleting.");
                     ::operator delete(pointer);
                 } else {
+                    //GIE_DEBUG_LOG("Caching size: "<<size<<"("<<size_from_bucket_idx_(idx)<<").");
                     assert(idx < m_buckets.size());
                     m_buckets[idx].push_back(pointer);
+                    --m_alive_objects;
                 }
             } catch (...){
                 ::operator delete(pointer);
@@ -123,6 +133,8 @@ namespace gie {
         unsigned int const m_min_exponent;
         unsigned int const m_max_exponent;
 	    std::vector< std::vector<pointer_type> > m_buckets;
+
+        unsigned int m_alive_objects = 0;
 	};
 
 

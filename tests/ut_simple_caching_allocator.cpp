@@ -5,6 +5,8 @@
 //================================================================================================================================================
 #include <boost/test/unit_test.hpp>
 //================================================================================================================================================
+#include "gie/simple_caching_allocator_mt_wrapper.hpp"
+#include "gie/simple_to_std_allocator.hpp"
 #include "gie/simple_caching_allocator.hpp"
 #include <boost/shared_ptr.hpp>
 //================================================================================================================================================
@@ -71,6 +73,73 @@ namespace gie {
             for(auto && bucket: alloc.m_buckets){  BOOST_TEST( bucket.size() == 0 ); }
         }
 
+
+        struct test_t{
+            int v1 =2;
+            int v2 = 1;
+
+        };
+
+
+        static void test4() {
+            gie::simple_caching_allocator alloc{4,13};
+
+            {
+                BOOST_TEST(alloc.m_alive_objects == 0);
+
+                typedef gie::simple_to_std_allocator_t<test_t, decltype(alloc)> allocator_t;
+
+                std::vector<test_t, allocator_t> vec{allocator_t{alloc}};
+
+                vec.resize(33, test_t{33, 77});
+
+                BOOST_TEST(alloc.m_alive_objects != 0);
+            }
+
+            {
+                BOOST_TEST(alloc.m_alive_objects == 0);
+
+                typedef gie::simple_to_std_allocator_t<test_t, decltype(alloc)> allocator_t;
+
+                std::vector<test_t, allocator_t> vec{allocator_t{alloc}};
+
+                vec.resize(33, test_t{33, 77});
+
+                BOOST_TEST(alloc.m_alive_objects != 0);
+            }
+        }
+
+        static void test5() {
+             gie::simple_mt_allocator_t<gie::simple_caching_allocator> alloc{4,13};
+
+            {
+                BOOST_TEST(alloc.m_allocator_.m_alive_objects == 0);
+
+                typedef gie::simple_to_std_allocator_t<test_t, decltype(alloc)> allocator_t;
+
+                std::vector<test_t, allocator_t> vec{allocator_t{alloc}};
+
+                vec.resize(33, test_t{33, 77});
+
+                BOOST_TEST(alloc.m_allocator_.m_alive_objects != 0);
+            }
+
+            {
+                BOOST_TEST(alloc.m_allocator_.m_alive_objects == 0);
+
+                typedef gie::simple_to_std_allocator_t<test_t, decltype(alloc)> allocator_t;
+
+                std::vector<test_t, allocator_t> vec{allocator_t{alloc}};
+
+                vec.resize(33, test_t{33, 77});
+
+                BOOST_TEST(alloc.m_allocator_.m_alive_objects != 0);
+            }
+
+
+        }
+
+
     };
 
 }
@@ -79,16 +148,23 @@ namespace gie {
 BOOST_AUTO_TEST_SUITE(simple_caching_allocator_test )
 //================================================================================================================================================
 BOOST_AUTO_TEST_CASE(test1_2) {
-
-        gie::simple_caching_allocator alloc{4,13};
-        gie::boost_test__simple_caching_allocator::test1(alloc);
-        gie::boost_test__simple_caching_allocator::test2(alloc);
-
+    gie::simple_caching_allocator alloc{4,13};
+    gie::boost_test__simple_caching_allocator::test1(alloc);
+    gie::boost_test__simple_caching_allocator::test2(alloc);
 }
 
 BOOST_AUTO_TEST_CASE(test3) {
     gie::simple_caching_allocator alloc{4,13};
     gie::boost_test__simple_caching_allocator::test3(alloc);
+}
+
+
+BOOST_AUTO_TEST_CASE(test4) {
+    gie::boost_test__simple_caching_allocator::test4();
+}
+
+BOOST_AUTO_TEST_CASE(test5) {
+    gie::boost_test__simple_caching_allocator::test5();
 }
 
 //================================================================================================================================================

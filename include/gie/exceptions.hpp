@@ -59,7 +59,7 @@
 
 #define GIE_THROW_IF(cond, x) do {  if(cond) GIE_THROW(x); }while(false)
 
-#define GIE_UNEXPECTED_IN_DTOR()    assert(false)
+#define GIE_UNEXPECTED_IN_DTOR()  do { GIE_DEBUG_LOG("Exception in dtor!"); assert(false); }while(false)
 
 #define GIE_UNIMPLEMENTED()	do {\
 	/*assert(!"UNIMPLEMENTED");*/	\
