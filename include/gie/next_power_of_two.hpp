@@ -8,6 +8,7 @@
 //================================================================================================================================================
 #pragma once
 //================================================================================================================================================
+#include "gie/exceptions.hpp"
 #include "debugger_break.hpp"
 
 #include <boost/static_assert.hpp>
@@ -16,6 +17,8 @@
 #include <assert.h>
 #include <limits.h>
 #include <limits>
+//================================================================================================================================================
+// round to next power of two
 //================================================================================================================================================
 namespace gie {
 
@@ -39,25 +42,59 @@ namespace gie {
 	GIE_DEF_BIT_FUNCS(unsigned long,l)
 	GIE_DEF_BIT_FUNCS(unsigned long long,ll)
 
+	template <class T>
+	std::pair<unsigned int,unsigned int> generic_get_first_low_high(T v){ //return pos+1 or 0 if not found
+        BOOST_STATIC_ASSERT( std::numeric_limits<T>::radix==2 );
+        BOOST_STATIC_ASSERT( !std::numeric_limits<T>::is_signed );
+
+        if(v==0) return std::make_pair(0,0);
+
+        unsigned int lease_set_idx = 0;
+        unsigned int shift_count = 0;
+
+        while(v && (lease_set_idx==0)){
+            if(v & 1 == 1) lease_set_idx = shift_count+1;
+
+            v>>=1;
+            ++shift_count;
+        }
+
+        while(v){
+            v>>=1;
+            ++shift_count;
+        }
+
+
+        return std::make_pair(lease_set_idx,shift_count);
+
+
+    }
+
 
 	template <class T>
-	T generic_next_power_of_two(T k) {
+	unsigned int generic_next_power_of_two_as_exponent(T const v) {
 
 		BOOST_STATIC_ASSERT( !std::numeric_limits<T>::is_signed );
 
-		if (k == 0)
-			return 1;
+        auto const lh_b = generic_get_first_low_high(v);
+        if(!lh_b.first){
+            return 0;
+        } else {
+            return lh_b.first==lh_b.second?lh_b.second-1:lh_b.second;
+        }
 
-		k--;
-
-		for( T i=1; i<sizeof(T)*CHAR_BIT; i<<=1 ){
-			k = k | k >> i;
-		}
-
-		assert( k<std::numeric_limits<T>::max() );
-
-		return  k+1;
 	}
+
+    template <class T>
+    T generic_next_power_of_two(T const v) {
+        BOOST_STATIC_ASSERT( !std::numeric_limits<T>::is_signed );
+
+        auto const exp = generic_next_power_of_two_as_exponent(v);
+        GIE_CHECK_EX( exp < static_cast<decltype(exp)>( std::numeric_limits<T>::digits ), exception::overflow_error() );
+
+        return static_cast<T>(1) << exp;
+    }
+
 
 	template <class T>
 	unsigned int gcc_next_power_of_two_as_exponent(T const v) {
@@ -77,29 +114,24 @@ namespace gie {
 		BOOST_STATIC_ASSERT( !std::numeric_limits<T>::is_signed );
 
 		auto const exp = gcc_next_power_of_two_as_exponent(v);
-		assert( exp < static_cast<decltype(exp)>( std::numeric_limits<T>::digits ) );
+        GIE_CHECK_EX( exp < static_cast<decltype(exp)>( std::numeric_limits<T>::digits ), exception::overflow_error() );
 
 		return static_cast<T>(1) << exp;
 	}
 
+
+
+
 	template <class T>
 	T next_power_of_two(T const v) {
-		auto const tmp = gcc_next_power_of_two(v);
-		assert(tmp==generic_next_power_of_two(v));
-
-		return tmp;
+		return gcc_next_power_of_two(v);;
 
 	}
 
 
 	template <class T>
-	T next_power_of_two_as_exponent(T const v, unsigned int const bit_pos) {
-
-		auto const tmp = gcc_next_power_of_two(v);
-		assert(tmp==generic_next_power_of_two(v));
-
-		return tmp;
-
+	unsigned int next_power_of_two_as_exponent(T const v) {
+		return gcc_next_power_of_two_as_exponent(v);
 	}
 
 

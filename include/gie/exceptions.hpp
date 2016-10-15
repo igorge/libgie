@@ -137,6 +137,9 @@ namespace gie {
         struct condition_check_failed : virtual unexpected { };
 
 
+		struct overflow_error : virtual root {};
+
+
         namespace impl {
 
             template <class T> void generate_backtrace(T const& /*e*/) {}
