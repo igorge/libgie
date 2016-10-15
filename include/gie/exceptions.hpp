@@ -137,7 +137,11 @@ namespace gie {
         struct condition_check_failed : virtual unexpected { };
 
 
-		struct overflow_error : virtual root {};
+		struct runtime_error : virtual root {};
+        struct overflow_error : virtual runtime_error {};
+
+        struct logic_error : virtual root {};
+        struct out_of_range : virtual logic_error {};
 
 
         namespace impl {
