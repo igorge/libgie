@@ -38,14 +38,14 @@ namespace gie {
             //GIE_DEBUG_TRACE_INOUT();
         }
 
-        T* allocate(std::size_t n){
+        T* allocate(std::size_t n)const{
             //GIE_DEBUG_LOG("Allocating "<<n*sizeof( T )<< " bytes");
 
             T * const p = static_cast< T* >( m_simple_allocator.allocate(n * sizeof( T )) );
             return p;
         }
 
-        void deallocate(T* p, std::size_t n){
+        void deallocate(T* p, std::size_t n)const{
             //GIE_DEBUG_LOG("Deallocating "<<n*sizeof( T )<< " bytes");
 
             m_simple_allocator.deallocate(p,n * sizeof( T ));
@@ -53,18 +53,13 @@ namespace gie {
 
 
         template <class TT, class... Args>
-        typename std::enable_if<!std::is_same<T,TT>::value, TT*>::type alloc_(Args&& ...args){
+        typename std::enable_if<!std::is_same<T,TT>::value, TT*>::type alloc_(Args&& ...args)const{
             rebind<TT> alloc{*this};
-            TT* const ptr = alloc.allocate(1);
-
-            auto const tmp = new (ptr)TT{std::forward<Args>(args)...};
-            assert(ptr==tmp);
-
-            return tmp;
+            return alloc.alloc_<TT>( std::forward<Args>(args)... );
         }
 
         template <class TT, class... Args>
-        typename std::enable_if<std::is_same<T,TT>::value, TT*>::type alloc_(Args&& ...args){
+        typename std::enable_if<std::is_same<T,TT>::value, TT*>::type alloc_(Args&& ...args)const{
             TT* const ptr = this->allocate(1);
 
             auto const tmp = new (ptr)TT{std::forward<Args>(args)...};
@@ -74,14 +69,17 @@ namespace gie {
         }
 
         template <class TT>
-        typename std::enable_if<!std::is_same<T,TT>::value, void >::type dealloc_(TT* const p){
+        typename std::enable_if<!std::is_same<T,TT>::value, void >::type dealloc_(TT* const p)const{
             rebind<TT> alloc{*this};
-            alloc.deallocate(p, 1);
+            alloc.dealloc_<TT>(p);
         }
 
         template <class TT>
-        typename std::enable_if<std::is_same<T,TT>::value, void >::type dealloc_(TT* const p){
-            this->deallocate(p, 1);
+        typename std::enable_if<std::is_same<T,TT>::value, void >::type dealloc_(TT* const p)const{
+            if(p) {
+                p->~T();
+                this->deallocate(p, 1);
+            }
         }
 
 

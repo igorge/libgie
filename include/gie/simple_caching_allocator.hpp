@@ -37,16 +37,26 @@ namespace gie {
 
         ~simple_caching_allocator(){
 
-            assert(m_alive_objects==0);
+            GIE_DEBUG_TRACE();
+            GIE_DEBUG_LOG("Alive objects: " << m_alive_objects);
 
-            for (auto const & bucket:m_buckets){
-                for (auto&& pointer : bucket){
-                    ::operator delete(pointer);
-                }
-            }
+            assert(m_alive_objects==0);
+//
+//            for (auto const & bucket:m_buckets){
+//                for (auto&& pointer : bucket){
+//                    ::operator delete(pointer);
+//                }
+//            }
+
         }
 
+//        void trace_buckets_(){
+//            GIE_DEBUG_LOG("alive="<<m_alive_objects<< "[0]="<<m_buckets[0].size() << " [1]="<<m_buckets[1].size());
+//        }
+
 		  void* allocate(std::size_t const size){
+
+//              trace_buckets_();
 
               //GIE_DEBUG_IF_LOG(m_alive_objects>1024, "WARNING: To many alive objects: "<<m_alive_objects);
 

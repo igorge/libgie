@@ -22,11 +22,13 @@ namespace gie {
         simple_mt_allocator_t(Args&&... args) : m_allocator_( std::forward<Args>(args)... ) {}
 
         void* allocate(std::size_t const size){
+//            GIE_DEBUG_TRACE();
             boost::mutex::scoped_lock lock{m_mutex};
             return m_allocator_.allocate(size);
         }
 
         void deallocate(void* const pointer, size_t const size)noexcept {
+            //GIE_DEBUG_TRACE();
             try{
                 boost::mutex::scoped_lock lock{m_mutex};
                 return m_allocator_.deallocate(pointer, size);
@@ -34,7 +36,10 @@ namespace gie {
                 GIE_UNEXPECTED_IN_DTOR();
                 m_allocator_.do_deallocate(pointer, size);
             }
+        }
 
+        ~simple_mt_allocator_t(){
+            GIE_DEBUG_TRACE();
         }
 
     private:
