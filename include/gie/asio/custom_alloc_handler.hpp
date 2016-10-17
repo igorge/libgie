@@ -78,15 +78,20 @@ namespace gie {
 			handler_(std::forward<Args>(args)...);
 		}
 
+       template <typename... Args>
+       void operator()(Args&&... args){
+           handler_(std::forward<Args>(args)...);
+       }
+
 		friend
 		void* asio_handler_allocate(std::size_t size, SelfT* this_handler){
-		  GIE_DEBUG_LOG("ALLOCATING: "<<size);
+//		  GIE_DEBUG_LOG("ALLOCATING: "<<size);
 		  return this_handler->allocator_.allocate(size);
 		}
 
 		friend
 		void asio_handler_deallocate(void* pointer, std::size_t size, SelfT* this_handler){
-		  GIE_DEBUG_LOG("DEALLOCATING: "<<size);
+//		  GIE_DEBUG_LOG("DEALLOCATING: "<<size);
 		  this_handler->allocator_.deallocate(pointer, size);
 		}
 

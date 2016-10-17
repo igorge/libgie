@@ -16,6 +16,30 @@
 namespace gie {
 
 
+    template <class SimpleAllocatorT>
+    struct simple_allocator_by_ref_wrapper_t{
+
+        simple_allocator_by_ref_wrapper_t(SimpleAllocatorT& allocator)
+                :m_allocator(allocator)
+        {
+        }
+
+        void* allocate(std::size_t const size)const {
+            return m_allocator.allocate(size);
+        }
+        void deallocate(void* const pointer, size_t const size)const noexcept{
+            return m_allocator.deallocate(pointer, size);
+        }
+
+
+        SimpleAllocatorT& m_allocator;
+    };
+
+    template <class SimpleAllocatorT>
+    simple_allocator_by_ref_wrapper_t<SimpleAllocatorT>
+    make_ref_wrapper(SimpleAllocatorT& allocator){ return simple_allocator_by_ref_wrapper_t<SimpleAllocatorT>(allocator); }
+
+
 	struct simple_caching_allocator {
 
         friend class boost_test__simple_caching_allocator;
@@ -35,18 +59,22 @@ namespace gie {
             m_buckets.resize(buckets);
 		}
 
+        simple_caching_allocator& operator=(simple_caching_allocator const&)=delete;
+        simple_caching_allocator(simple_caching_allocator const&)=delete;
+        simple_caching_allocator(simple_caching_allocator&&)=delete;
+
         ~simple_caching_allocator(){
 
             GIE_DEBUG_TRACE();
             GIE_DEBUG_LOG("Alive objects: " << m_alive_objects);
 
-            assert(m_alive_objects==0);
-//
-//            for (auto const & bucket:m_buckets){
-//                for (auto&& pointer : bucket){
-//                    ::operator delete(pointer);
-//                }
-//            }
+            assert(m_alive_objects==0); // to be sure, that all users of this allocator have returned all memory back
+
+            for (auto const & bucket:m_buckets){
+                for (auto&& pointer : bucket){
+                    ::operator delete(pointer);
+                }
+            }
 
         }
 
