@@ -59,7 +59,13 @@
 
 #define GIE_THROW_IF(cond, x) do {  if(cond) GIE_THROW(x); }while(false)
 
-#define GIE_UNEXPECTED_IN_DTOR()  do { GIE_DEBUG_LOG("Exception in dtor!"); assert(false); }while(false)
+#define GIE_UNEXPECTED_IN_DTOR() do {       \
+    GIE_DEBUG_LOG("Exception in dtor!");    \
+    try{                                    \
+        ::gie::e_filter_log_exception(); } catch (...) {};   \
+        assert(false);                      \
+    } while(false)                          \
+    /**/
 
 #define GIE_UNIMPLEMENTED()	do {\
 	/*assert(!"UNIMPLEMENTED");*/	\
@@ -154,10 +160,14 @@ namespace gie {
 
             }
 
-        }
+        }// end ns impl
 
 
-    } // end ns impl
+    }
+
+
+
+    void e_filter_log_exception();
 
     template <class E>
     void append_bt(E&e, std::string&& item, unsigned int line=0){
@@ -185,7 +195,6 @@ namespace gie {
     }
 
     inline void e_filter_identity(){throw;}
-
 
     namespace impl {
     	template <class T, int dummy=0>

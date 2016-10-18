@@ -42,6 +42,13 @@ namespace gie {
 	GIE_DEF_BIT_FUNCS(unsigned long,l)
 	GIE_DEF_BIT_FUNCS(unsigned long long,ll)
 
+
+    template <class T>
+    std::pair<unsigned int,unsigned int> gcc_get_first_low_high(T v) { //return pos+1 or 0 if not found
+        return {get_first_low_bit(v),  get_first_high_bit(v)};
+    }
+
+
 	template <class T>
 	std::pair<unsigned int,unsigned int> generic_get_first_low_high(T v){ //return pos+1 or 0 if not found
         BOOST_STATIC_ASSERT( std::numeric_limits<T>::radix==2 );
@@ -53,7 +60,7 @@ namespace gie {
         unsigned int shift_count = 0;
 
         while(v && (lease_set_idx==0)){
-            if(v & 1 == 1) lease_set_idx = shift_count+1;
+            if( v & 1 ) lease_set_idx = shift_count+1;
 
             v>>=1;
             ++shift_count;

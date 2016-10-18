@@ -2,12 +2,14 @@ cmake_minimum_required(VERSION 2.8)
 project(libgie)
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
-set(proj_exe_name libgie)
+set(proj_binary_name libgie)
 
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -Wextra -Wno-deprecated -Wno-unused-parameter")
 
-set(proj_sources 
-    	include/gie/dummy.cpp)
+
+set(SOURCE_FILES
+    "src/exceptions.cpp")
 
 ### UT
 add_definitions(-DBOOST_TEST_DYN_LINK)
@@ -35,14 +37,14 @@ set(TESTS_SOURCES
     
 find_package (Boost COMPONENTS unit_test_framework system date_time REQUIRED)
     
-set(TEST test_${proj_exe_name})
+set(TEST test_${proj_binary_name})
 add_executable (${TEST} ${TESTS_SOURCES})
-target_link_libraries (${TEST} ${PROJECT} ${Boost_LIBRARIES})
+target_link_libraries (${TEST} ${proj_binary_name} ${Boost_LIBRARIES})
 enable_testing()
 add_test (${TEST} ${TEST})
 ###
 
 
 include_directories(${Boost_INCLUDE_DIRS} ${PROJECT_SOURCE_DIR}/include)
-add_library(${proj_exe_name} ${proj_sources} ${proj_headers_moc})
-target_link_libraries(${proj_exe_name} ${QT_LIBRARIES})
+add_library(${proj_binary_name} ${SOURCE_FILES} ${proj_headers_moc})
+target_link_libraries(${proj_binary_name} ${QT_LIBRARIES})

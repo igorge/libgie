@@ -9,9 +9,95 @@
 //================================================================================================================================================
 #include <boost/test/unit_test.hpp>
 //================================================================================================================================================
+#include "gie/pair_ostream.hpp"
+
 #include "gie/next_power_of_two.hpp"
 //================================================================================================================================================
 BOOST_AUTO_TEST_SUITE( next_power_of_two )
+//================================================================================================================================================
+BOOST_AUTO_TEST_CASE( generic_get_first_low_high_01 ) {
+
+        {
+            auto const value = 0b0u;
+            auto const expected_result =  std::make_pair<unsigned int, unsigned int>(0, 0);
+
+            BOOST_TEST(gie::generic_get_first_low_high(value) == expected_result);
+            BOOST_TEST(gie::gcc_get_first_low_high(value) == expected_result);
+        }
+
+        {
+            auto const value = 0b0u;
+            auto const expected_result =  std::make_pair<unsigned int, unsigned int>(0, 0);
+
+            BOOST_TEST(gie::generic_get_first_low_high(value) == expected_result);
+            BOOST_TEST(gie::gcc_get_first_low_high(value) == expected_result);
+        }
+
+        {
+            auto const value = 0b01u;
+            auto const expected_result =  std::make_pair<unsigned int, unsigned int>(1, 1);
+
+            BOOST_TEST(gie::generic_get_first_low_high(value) == expected_result);
+            BOOST_TEST(gie::gcc_get_first_low_high(value) == expected_result);
+        }
+
+        {
+            auto const value = 0b10u;
+            auto const expected_result =  std::make_pair<unsigned int, unsigned int>(2, 2);
+
+            BOOST_TEST(gie::generic_get_first_low_high(value) == expected_result);
+            BOOST_TEST(gie::gcc_get_first_low_high(value) == expected_result);
+        }
+
+        {
+            auto const value = 0b11u;
+            auto const expected_result =  std::make_pair<unsigned int, unsigned int>(1, 2);
+
+            BOOST_TEST(gie::generic_get_first_low_high(value) == expected_result);
+            BOOST_TEST(gie::gcc_get_first_low_high(value) == expected_result);
+        }
+
+        {
+            auto const value = 0b100u;
+            auto const expected_result =  std::make_pair<unsigned int, unsigned int>(3, 3);
+
+            BOOST_TEST(gie::generic_get_first_low_high(value) == expected_result);
+            BOOST_TEST(gie::gcc_get_first_low_high(value) == expected_result);
+        }
+
+        {
+            auto const value = 0b101u;
+            auto const expected_result =  std::make_pair<unsigned int, unsigned int>(1, 3);
+
+            BOOST_TEST(gie::generic_get_first_low_high(value) == expected_result);
+            BOOST_TEST(gie::gcc_get_first_low_high(value) == expected_result);
+        }
+
+        {
+            auto const value = 0b110u;
+            auto const expected_result =  std::make_pair<unsigned int, unsigned int>(2, 3);
+
+            BOOST_TEST(gie::generic_get_first_low_high(value) == expected_result);
+            BOOST_TEST(gie::gcc_get_first_low_high(value) == expected_result);
+        }
+
+        {
+            auto const value = 0b111u;
+            auto const expected_result =  std::make_pair<unsigned int, unsigned int>(1, 3);
+
+            BOOST_TEST(gie::generic_get_first_low_high(value) == expected_result);
+            BOOST_TEST(gie::gcc_get_first_low_high(value) == expected_result);
+        }
+
+        {
+            auto const value = std::numeric_limits<unsigned int>::max();
+            auto const expected_result =  std::make_pair<unsigned int, unsigned int>(1, std::numeric_limits<unsigned int>::digits);
+
+            BOOST_TEST(gie::generic_get_first_low_high(value) == expected_result);
+            BOOST_TEST(gie::gcc_get_first_low_high(value) == expected_result);
+        }
+
+}
 //================================================================================================================================================
 BOOST_AUTO_TEST_CASE( test1 ) {
         BOOST_TEST(gie::next_power_of_two(0b0000u) == 0b0001u);
