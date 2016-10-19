@@ -67,10 +67,24 @@ namespace gie {
             //GIE_DEBUG_TRACE_INOUT();
         }
 
+
+        bool check_alignment(void* const pointer, size_t const size, size_t const count)const{
+            auto p = pointer;
+            auto sz = size;
+            p = std::align(alignof(T), sizeof(T)*count, p, sz);
+
+            return pointer == p;
+        }
+
         T* allocate(std::size_t n)const{
             //GIE_DEBUG_LOG("Allocating "<<n*sizeof( T )<< " bytes");
 
-            T * const p = static_cast< T* >( m_simple_allocator.allocate(n * sizeof( T )) );
+            auto const buffer_in_bytes =  n * sizeof( T );
+
+            void * const buffer = m_simple_allocator.allocate(buffer_in_bytes); //rely on ::operator new() to allocate memory suitable for any type
+            assert(check_alignment(buffer, buffer_in_bytes, n));
+
+            T * const p = static_cast< T* >( buffer );
             return p;
         }
 
