@@ -16,11 +16,11 @@
 BOOST_AUTO_TEST_SUITE(simple_lru_tests )
 //================================================================================================================================================
 
-    template <class T> using allocator_t = gie::simple_to_std_allocator_t<T, gie::simple_caching_allocator>;
-    gie::simple_caching_allocator simple_alloc{4,13};
+//    template <class T> using allocator_t = gie::simple_to_std_allocator_t<T, gie::simple_caching_allocator>;
+//    gie::simple_caching_allocator simple_alloc{4,13};
 
-//    template <class T> using allocator_t = std::allocator<T>;
-//    allocator_t<void> simple_alloc{};
+    template <class T> using allocator_t = std::allocator<T>;
+    allocator_t<void> simple_alloc{};
 
     BOOST_AUTO_TEST_CASE(test1) {
 
