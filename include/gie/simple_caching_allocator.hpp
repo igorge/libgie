@@ -65,8 +65,8 @@ namespace gie {
 
         ~simple_caching_allocator(){
 
-            GIE_DEBUG_TRACE();
-            GIE_DEBUG_LOG("Alive objects: " << m_alive_objects);
+            //GIE_DEBUG_TRACE();
+            //GIE_DEBUG_LOG("Alive objects: " << m_alive_objects);
 
             assert(m_alive_objects==0); // to be sure, that all users of this allocator have returned all memory back
 
@@ -82,7 +82,7 @@ namespace gie {
 //            GIE_DEBUG_LOG("alive="<<m_alive_objects<< "[0]="<<m_buckets[0].size() << " [1]="<<m_buckets[1].size());
 //        }
 
-		  void* allocate(std::size_t const size){
+        void* allocate(std::size_t const size){
 
 //              trace_buckets_();
 
@@ -90,14 +90,14 @@ namespace gie {
 
               int const idx = bucket_idx_from_size_(size);
               if(idx==-1){
-                  GIE_DEBUG_LOG("simple_caching_allocator: size "<<size<<" is to large for caching.");
+                  //GIE_DEBUG_LOG("simple_caching_allocator: size "<<size<<" is to large for caching.");
                   return ::operator new(size);
               } else {
                   assert(static_cast<size_t>(idx) < m_buckets.size());
 
                   if (m_buckets[idx].empty()){
                       auto const effective_size = size_from_bucket_idx_(idx);
-                      GIE_DEBUG_LOG("Buckets empty for size: size "<<size<<"("<<effective_size<<").");
+                      //GIE_DEBUG_LOG("Buckets empty for size: size "<<size<<"("<<effective_size<<").");
                       assert(effective_size>=size);
                       auto const tmp = ::operator new(effective_size);
                       ++m_alive_objects;
@@ -110,7 +110,7 @@ namespace gie {
                   }
               }
 
-		  }
+        }
 
         void deallocate(void* const pointer, size_t const size)noexcept {
 
@@ -119,7 +119,7 @@ namespace gie {
             try {
                 int const idx = bucket_idx_from_size_(size);
                 if(idx==-1){
-                    GIE_DEBUG_LOG("simple_caching_allocator: size "<<size<<" is to large for caching, deleting.");
+                    //GIE_DEBUG_LOG("simple_caching_allocator: size "<<size<<" is to large for caching, deleting.");
                     do_deallocate(pointer, size);
                 } else {
                     //GIE_DEBUG_LOG("Caching size: "<<size<<"("<<size_from_bucket_idx_(idx)<<").");

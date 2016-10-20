@@ -48,7 +48,8 @@ set(TESTS_SOURCES
     "tests/ut_next_power_of_two.cpp"
     "tests/sio2_test.cpp"
     "tests/sio2_test02.cpp"
-    "tests/ut_simple_caching_allocator.cpp")
+    "tests/ut_simple_caching_allocator.cpp"
+    "tests/ut_simple_lru.cpp")
     
 find_package (Boost COMPONENTS unit_test_framework system date_time REQUIRED)
     

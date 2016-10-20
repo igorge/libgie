@@ -39,7 +39,7 @@ namespace gie {
         }
 
         ~simple_mt_allocator_t(){
-            GIE_DEBUG_TRACE();
+            //GIE_DEBUG_TRACE();
         }
 
     private:
