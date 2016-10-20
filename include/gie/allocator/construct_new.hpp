@@ -28,7 +28,8 @@ namespace gie {
 
     template <class T, class AllocatorT, class... Args>
     typename std::enable_if< ! std::is_same<T,typename AllocatorT::value_type>::value, T*>::type construct_new(AllocatorT& alloc, Args&& ...args) {
-        typename AllocatorT::template rebind<T> rebound_allocator{alloc};
+        typedef typename std::allocator_traits<AllocatorT>::template rebind_alloc<T> rebound_allocator_t;
+        rebound_allocator_t rebound_allocator{alloc};
         return construct_new<T>(rebound_allocator, std::forward<Args>(args)... );
     };
 
@@ -43,7 +44,8 @@ namespace gie {
 
     template <class T, class AllocatorT>
     typename std::enable_if< ! std::is_same<T,typename AllocatorT::value_type>::value, void>::type destroy_free(AllocatorT& alloc, T* const p){
-        typename AllocatorT::template rebind<T> rebound_allocator{alloc};
+        typedef typename std::allocator_traits<AllocatorT>::template rebind_alloc<T> rebound_allocator_t;
+        rebound_allocator_t rebound_allocator{alloc};
         destroy_free(rebound_allocator, p);
     }
 

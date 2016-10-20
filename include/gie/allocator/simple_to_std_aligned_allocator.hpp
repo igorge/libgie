@@ -29,7 +29,10 @@ namespace gie {
 
         template <typename T1, typename T2> friend class simple_to_std_aligned_allocator_t;
 
-        template <typename U> using  rebind = simple_to_std_aligned_allocator_t<U, SimpleAllocatorT>;
+        template <typename U>
+        struct rebind {
+            typedef simple_to_std_aligned_allocator_t<U, SimpleAllocatorT> other;
+        };
 
         explicit simple_to_std_aligned_allocator_t(SimpleAllocatorT& simple_allocator)
                 : m_simple_allocator(simple_allocator)
