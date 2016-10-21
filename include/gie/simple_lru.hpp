@@ -72,7 +72,7 @@ namespace gie {
 
 
         template <class P1, class P2>
-        void insert(P1&& key, P2&& value){
+        T const& insert(P1&& key, P2&& value){
 
             auto& index0 = m_container.template get<0>();
             assert(index0.size()<=m_max_count);
@@ -85,14 +85,17 @@ namespace gie {
                     shrink_();
                 }
 
-                auto const& r =  index0.emplace( std::forward<P1>(key),  std::forward<P2>(value) );
-                GIE_CHECK(r.second);
+                auto const& r2 =  index0.emplace( std::forward<P1>(key),  std::forward<P2>(value) );
+                GIE_CHECK(r2.second);
+
+                return r2.first->value;
             } else {
                 GIE_DEBUG_LOG("index for key '"<<key<<"' found, replacing...");
                 GIE_CHECK( index0.modify(r, [&value](value_type& v){v.value=std::forward<P2>(value);}) );
 
-
                 update_used_(r);
+
+                return r->value;
             }
         }
 

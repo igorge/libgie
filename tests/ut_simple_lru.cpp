@@ -27,19 +27,33 @@ BOOST_AUTO_TEST_SUITE(simple_lru_tests )
         typedef gie::lru_t<unsigned int, unsigned int, allocator_t> lru1_t;
         lru1_t lru{3, allocator_t<char>{simple_alloc}};
 
-        lru.insert(0,1);
+        auto const& r = lru.insert(0,1);
 
-        BOOST_TEST( lru.find(0) );
+        BOOST_TEST(r==1);
+
+        auto const& r2 = lru.find(0);
+        BOOST_TEST( r2 );
+        BOOST_TEST( &(*r2)==&r);
+
         BOOST_TEST( !lru.find(1) );
 
         std::vector<lru1_t::value_type> vec;
-        for( auto && v: lru.get_lru_list()){
-            vec.emplace_back(v);
-        }
+        for( auto && v: lru.get_lru_list()){vec.emplace_back(v);}
 
         BOOST_TEST( vec.size() == 1);
         BOOST_TEST( vec.at(0).key == 0);
         BOOST_TEST( vec.at(0).value==1);
+
+        auto const& r3 = lru.insert(0,11);
+        BOOST_TEST( r3 );
+        BOOST_TEST(&r3==&r);
+
+        vec.clear();
+        for( auto && v: lru.get_lru_list()){vec.emplace_back(v);}
+
+        BOOST_TEST( vec.size() == 1);
+        BOOST_TEST( vec.at(0).key == 0);
+        BOOST_TEST( vec.at(0).value==11);
 
 
     }
