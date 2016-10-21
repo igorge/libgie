@@ -23,6 +23,7 @@ namespace gie {
             using page_index_t = unsigned int;
             using page_count_t = unsigned int;
             using streampos_t = std::streamoff; // c++11: It (std::streamoff) is a typdef of one the fundamental signed integral types large enough to represent the maximum possible file size supported by the system.
+            using streamsize_t = streampos_t;
 
             caching_istream_iterator_shared_t(caching_istream_iterator_shared_t const&) = delete;
             caching_istream_iterator_shared_t(caching_istream_iterator_shared_t &&) = delete;
@@ -121,11 +122,7 @@ namespace gie {
                 return page;
             }
 
-            void debug_log_is_state_(){
-                GIE_DEBUG_LOG("good: "<< m_is.good() << ", bad: " <<m_is.bad()<<", fail: "<< m_is.fail() <<", eof: "<< m_is.eof() );
-            }
-
-            static streampos_t stream_size(std::istream& is){
+            static streamsize_t stream_size(std::istream& is){
                 is.seekg(0, std::ios_base::end);
                 auto const s = is.tellg();
                 GIE_CHECK(is.good());
@@ -133,7 +130,7 @@ namespace gie {
                 return s;
             }
 
-            static page_index_t calc_max_page(streampos_t const p_ssize, size_t page_size ){
+            static page_index_t calc_max_page(streamsize_t const p_ssize, size_t page_size ){
                 assert(p_ssize>1);
                 assert(p_ssize>1);
 
