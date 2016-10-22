@@ -8,14 +8,18 @@
 //================================================================================================================================================
 #pragma once
 //================================================================================================================================================
+#include "gie/type_util.hpp"
 #include "gie/allocator/construct_new.hpp"
 #include "gie/simple_lru.hpp"
 #include "gie/exceptions.hpp"
 
 #include <boost/iterator/iterator_facade.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/range.hpp>
+#include <boost/integer.hpp>
 
 #include <utility>
+#include <limits>
 //================================================================================================================================================
 namespace gie {
 
@@ -42,7 +46,7 @@ namespace gie {
 
 
             template <class AnyCompatibleAllocator>
-            caching_istream_iterator_shared_t(AnyCompatibleAllocator && p_allocator, std::istream& p_is, size_t const p_page_size, page_index_t const p_cache_page_count)
+            caching_istream_iterator_shared_t(AnyCompatibleAllocator && p_allocator, std::istream& p_is, size_t const p_page_size, page_count_t const p_cache_page_count)
                     : m_allocator(std::forward<AnyCompatibleAllocator>(p_allocator))
                     , m_is(p_is)
                     , m_page_size(p_page_size)
@@ -52,14 +56,10 @@ namespace gie {
             {
                 assert(m_page_size>1);
                 assert(m_page_size<=std::numeric_limits<streampos_t>::max());
-                assert(m_stream_page_count>0);
+                assert(m_stream_page_count>=0);
                 assert(m_is.good());
 
                 m_is.exceptions(std::ios::goodbit);
-
-                //test if stream supports seeking
-                m_is.seekg(0);
-                GIE_CHECK(m_is.good());
             }
 
             shared_page_type const& get_page(page_index_t const idx){
@@ -77,9 +77,28 @@ namespace gie {
 
             }
 
-            size_t size()const{
+            streamsize_t stream_size()const{
+                assert(m_stream_size>=0);
                 return m_stream_size;
             }
+
+            size_t page_size()const{
+                return m_page_size;
+            }
+
+            std::pair<page_index_t, size_t> get_page_index_from_position(streampos_t const p_pos){
+                typedef gie::uint_can_hold_digits<decltype(p_pos), size_t>::type u_type;
+
+                assert(p_pos>=0);
+                assert(p_pos<m_stream_size);
+
+                auto const pos = static_cast<u_type>(p_pos);
+
+                auto const m = pos / m_page_size;
+                auto const r = pos % m_page_size;
+
+                return {m,r};
+            };
 
 
         private:
@@ -138,6 +157,17 @@ namespace gie {
             }
 
             static streamsize_t stream_size(std::istream& is){
+                GIE_CHECK(!is.bad());
+
+//                { // workaround for empty boost::iostreams::stream, which fails at seekg(0, std::ios_base::end)
+//                    is.seekg(0);
+//                    if(!is.good()){
+//                        GIE_DEBUG_LOG("Empty sized stream or seekg is not supported.");
+//                        is.clear();
+//                        return 0;
+//                    }
+//                }
+
                 is.seekg(0, std::ios_base::end);
                 auto const s = is.tellg();
                 GIE_CHECK(is.good());
@@ -146,12 +176,12 @@ namespace gie {
             }
 
             static page_index_t calc_max_page(streamsize_t const p_ssize, size_t page_size ){
-                assert(p_ssize>1);
-                assert(p_ssize>1);
+                assert(p_ssize>=0);
+                assert(page_size>1);
 
-                size_t const ssize = static_cast<size_t>(p_ssize);
+                typedef gie::uint_can_hold_digits<decltype(p_ssize), decltype(page_size)>::type u_type;
 
-                assert(ssize>=page_size);
+                u_type const ssize = p_ssize;
 
                 auto const m = ssize / page_size;
                 auto const r = ssize % page_size;
@@ -162,7 +192,7 @@ namespace gie {
             allocator_t<page_type> m_allocator;
             std::istream& m_is;
             size_t const m_page_size;
-            streampos_t const m_stream_size;
+            streamsize_t const m_stream_size;
             page_index_t const m_stream_page_count;
             lru_type m_lru;
 
@@ -172,18 +202,113 @@ namespace gie {
     }
 
 
-//    struct caching_istream_iterator_t
-//            : boost::iterator_facade<caching_istream_iterator_t, char, boost::forward_traversal_tag>
-//    {
-//        friend class boost::iterator_core_access;
-//
-//        void increment(){
-//            GIE_UNEXPECTED();
-//        }
-//
-//        dereference() const
-//
-//    };
+    struct caching_istream_iterator_t
+            : boost::iterator_facade<caching_istream_iterator_t, char, boost::forward_traversal_tag, char const&>
+    {
+        friend class boost::iterator_core_access;
+
+
+        typedef impl::caching_istream_iterator_shared_t<std::allocator> impl_type;
+        typedef boost::shared_ptr<impl_type> shared_impl_type;
+
+        typedef impl_type::streampos_t  position_t;
+        typedef impl_type::page_count_t page_count_t;
+        typedef impl_type::page_index_t page_index_t;
+        typedef impl_type::shared_page_type shared_page_type;
+
+        caching_istream_iterator_t(){};
+
+        caching_istream_iterator_t(std::istream& is, size_t const p_page_size, page_count_t const p_cache_page_count)
+                : m_impl( make_shared(std::allocator<void>(), is, p_page_size, p_cache_page_count) )
+        {
+        };
+
+
+        bool equal(caching_istream_iterator_t const& other)const{
+
+            if(this->m_impl == nullptr) { // normalize: l - iter, r - end marker
+                if( other.m_impl== nullptr ) return true;
+                return other.equal(*this);
+            }
+
+            assert(m_position>=0);
+            assert(m_position<=m_impl->stream_size());
+
+            if(other.m_impl==nullptr){
+                if(m_impl->stream_size()==m_position) return true;
+
+                return false;
+            }
+
+            return m_position==other.m_position;
+        }
+
+
+        void increment(){
+            assert(m_impl);
+            assert(m_position < m_impl->stream_size());
+            assert(m_rel_position < m_impl->page_size());
+
+            ++m_position;
+            ++m_rel_position;
+
+            if(m_current_page){
+                assert(m_rel_position <= m_current_page->size());
+
+                if(m_rel_position==m_current_page->size()){
+                    m_current_page = nullptr;
+                    m_rel_position = 0;
+                }
+            }
+        }
+
+
+        reference dereference()const{
+            assert(m_impl);
+            assert(m_position < m_impl->stream_size());
+            assert(m_rel_position < m_impl->page_size());
+
+            lazy_load_page_();
+            assert(m_rel_position < m_current_page->size());
+
+            return (*m_current_page)[m_rel_position];
+        }
+
+
+    private:
+
+        template <class AnyCompatibleAllocator>
+        static shared_impl_type make_shared(AnyCompatibleAllocator && p_allocator, std::istream& p_is, size_t const p_page_size, page_count_t const p_cache_page_count){
+
+            auto * const raw_impl = gie::construct_new<impl_type>(p_allocator, p_allocator, p_is, p_page_size, p_cache_page_count);
+            shared_impl_type impl{raw_impl, [alloc = p_allocator](impl_type * pointer){gie::destroy_free(alloc, pointer);} };
+            return impl;
+        }
+
+    private:
+        void lazy_load_page_()const{
+            if(!m_current_page){
+                auto const idx = m_impl->get_page_index_from_position(m_position);
+                m_current_page = m_impl->get_page(idx.first);
+                m_rel_position = idx.second;
+            }
+
+        }
+
+    private:
+
+        position_t m_position = 0;
+        mutable size_t     m_rel_position = 0;
+        mutable shared_page_type m_current_page = nullptr;
+
+        shared_impl_type m_impl;
+
+    };
+
+
+     auto make_istream_range(std::istream& is, size_t const page_size, caching_istream_iterator_t::page_count_t const pages_to_cache){
+        return boost::make_iterator_range( caching_istream_iterator_t{is, page_size, pages_to_cache}, caching_istream_iterator_t{} );
+    }
 }
 //================================================================================================================================================
 #endif

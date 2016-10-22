@@ -119,6 +119,73 @@ BOOST_AUTO_TEST_SUITE(caching_istream_iterator_tests )
     }
 
 
+
+
+    BOOST_AUTO_TEST_CASE( test03 ) {
+
+        std::istringstream input_stream{""};
+
+        BOOST_TEST( input_stream.good() );
+
+        auto r = gie::make_istream_range( input_stream, 2, 10 );
+
+        GIE_CHECK(r.end() == r.end());
+        GIE_CHECK( r.begin()==r.end() );
+
+    }
+
+    BOOST_AUTO_TEST_CASE( test04 ) {
+
+        std::vector<char> data={0};
+
+        boost::iostreams::basic_array<char> source(data.data(),data.size());
+        boost::iostreams::stream<boost::iostreams::basic_array<char> > input_stream(source);
+
+        BOOST_TEST( input_stream.good() );
+
+        auto r = gie::make_istream_range( input_stream,  2, 10  );
+
+        BOOST_CHECK(r.end() == r.end());
+        BOOST_CHECK( r.begin()!=r.end() );
+
+        auto i = r.begin();
+        BOOST_CHECK(i==r.begin());
+
+        ++i;
+        BOOST_CHECK(i!=r.begin());
+        BOOST_CHECK(i==r.end());
+    }
+
+
+    BOOST_AUTO_TEST_CASE( test05 ) {
+
+        std::vector<char> data = {42};
+
+        boost::iostreams::basic_array<char> source(data.data(), data.size());
+        boost::iostreams::stream<boost::iostreams::basic_array<char> > input_stream(source);
+
+        BOOST_TEST(input_stream.good());
+
+        auto r = gie::make_istream_range(input_stream, 2, 10);
+
+        BOOST_CHECK(r.end() == r.end());
+        BOOST_CHECK(r.begin() != r.end());
+        BOOST_CHECK(r.end() != r.begin());
+
+        auto i = r.begin();
+        BOOST_CHECK(i == r.begin());
+
+        BOOST_TEST(*i == 42);
+
+        auto b = i;
+
+        ++i;
+        BOOST_CHECK(i != r.begin());
+        BOOST_CHECK(i == r.end());
+        BOOST_CHECK(r.end() == i);
+
+    }
+
 //================================================================================================================================================
 BOOST_AUTO_TEST_SUITE_END()
 //================================================================================================================================================
