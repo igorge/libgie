@@ -8,16 +8,20 @@
 //================================================================================================================================================
 #pragma once
 //================================================================================================================================================
+#include "gie/allocator/construct_new.hpp"
 #include "gie/simple_lru.hpp"
 #include "gie/exceptions.hpp"
 
 #include <boost/iterator/iterator_facade.hpp>
 #include <boost/shared_ptr.hpp>
+
+#include <utility>
 //================================================================================================================================================
 namespace gie {
 
     namespace impl {
 
+        template <template <class...> class AllocatorTT, class... AllocatorTTTemplateParams>
         struct caching_istream_iterator_shared_t {
 
             using page_index_t = unsigned int;
@@ -29,16 +33,22 @@ namespace gie {
             caching_istream_iterator_shared_t(caching_istream_iterator_shared_t &&) = delete;
             caching_istream_iterator_shared_t& operator=(caching_istream_iterator_shared_t const&) = delete;
 
-            using shared_page_type = boost::shared_ptr<std::vector<char>>;
-            using lru_type = lru_t<page_index_t, shared_page_type, std::allocator>;
+            template<class T>
+            using allocator_t = AllocatorTT<T, AllocatorTTTemplateParams...>;
+
+            using page_type =  std::vector<char,allocator_t<char> >;
+            using shared_page_type = boost::shared_ptr< page_type >;
+            using lru_type = lru_t<page_index_t, shared_page_type, allocator_t>;
 
 
-            caching_istream_iterator_shared_t(std::istream& p_is, size_t const p_page_size, page_index_t const p_cache_page_count)
-                    : m_is(p_is)
+            template <class AnyCompatibleAllocator>
+            caching_istream_iterator_shared_t(AnyCompatibleAllocator && p_allocator, std::istream& p_is, size_t const p_page_size, page_index_t const p_cache_page_count)
+                    : m_allocator(std::forward<AnyCompatibleAllocator>(p_allocator))
+                    , m_is(p_is)
                     , m_page_size(p_page_size)
                     , m_stream_size(stream_size(p_is))
                     , m_stream_page_count(calc_max_page( m_stream_size, p_page_size))
-                    , m_lru(p_cache_page_count, std::allocator<void>{})
+                    , m_lru(p_cache_page_count, m_allocator)
             {
                 assert(m_page_size>1);
                 assert(m_page_size<=std::numeric_limits<streampos_t>::max());
@@ -46,6 +56,10 @@ namespace gie {
                 assert(m_is.good());
 
                 m_is.exceptions(std::ios::goodbit);
+
+                //test if stream supports seeking
+                m_is.seekg(0);
+                GIE_CHECK(m_is.good());
             }
 
             shared_page_type const& get_page(page_index_t const idx){
@@ -104,7 +118,7 @@ namespace gie {
                 auto const read_bytes = m_is.gcount();
                 GIE_CHECK(read_bytes > 0 && read_bytes<=static_cast<streampos_t>(m_page_size));
 
-                if(read_bytes!=new_page->size()){ // eof detected
+                if(read_bytes!=static_cast<streampos_t>(new_page->size())){ // eof detected
                     assert(m_is.eof());
                     new_page->resize(read_bytes);
                 }
@@ -117,7 +131,8 @@ namespace gie {
             }
 
             shared_page_type alloc_page(){
-                auto const& page =  boost::make_shared<shared_page_type::element_type>();
+                auto const page_raw_ptr = construct_new<page_type>(m_allocator, m_allocator);
+                shared_page_type page{page_raw_ptr, [allocator=m_allocator](page_type* pointer)mutable{ destroy_free(allocator, pointer); }, m_allocator};
                 page->resize(m_page_size);
                 return page;
             }
@@ -144,6 +159,7 @@ namespace gie {
                 return m + (r==0?0:1);
             }
 
+            allocator_t<page_type> m_allocator;
             std::istream& m_is;
             size_t const m_page_size;
             streampos_t const m_stream_size;
