@@ -147,25 +147,110 @@ namespace gie {
 
 BOOST_AUTO_TEST_SUITE(simple_caching_allocator_test )
 //================================================================================================================================================
-BOOST_AUTO_TEST_CASE(test1_2) {
-    gie::simple_caching_allocator alloc{4,13};
-    gie::boost_test__simple_caching_allocator::test1(alloc);
-    gie::boost_test__simple_caching_allocator::test2(alloc);
-}
+    BOOST_AUTO_TEST_CASE(test1_2) {
+        gie::simple_caching_allocator alloc{4,13};
+        gie::boost_test__simple_caching_allocator::test1(alloc);
+        gie::boost_test__simple_caching_allocator::test2(alloc);
+    }
 
-BOOST_AUTO_TEST_CASE(test3) {
-    gie::simple_caching_allocator alloc{4,13};
-    gie::boost_test__simple_caching_allocator::test3(alloc);
-}
+    BOOST_AUTO_TEST_CASE(test3) {
+        gie::simple_caching_allocator alloc{4,13};
+        gie::boost_test__simple_caching_allocator::test3(alloc);
+    }
 
 
-BOOST_AUTO_TEST_CASE(test4) {
-    gie::boost_test__simple_caching_allocator::test4();
-}
+    BOOST_AUTO_TEST_CASE(test4) {
+        gie::boost_test__simple_caching_allocator::test4();
+    }
 
-BOOST_AUTO_TEST_CASE(test5) {
-    gie::boost_test__simple_caching_allocator::test5();
-}
+    BOOST_AUTO_TEST_CASE(test5) {
+        gie::boost_test__simple_caching_allocator::test5();
+    }
+
+
+    using simple_alloc_t = gie::simple_caching_allocator;
+    template <class T> using alloc_aligned_tt = gie::simple_to_std_aligned_allocator_t<T, simple_alloc_t>;
+    template <class T> using alloc_tt = gie::simple_to_std_non_aligned_allocator_t<T, simple_alloc_t>;
+
+
+    BOOST_AUTO_TEST_CASE(xxx_to_std_xxx_allocator_test_01) {
+
+        gie::simple_caching_allocator alloc{4, 13};
+        gie::simple_caching_allocator alloc2{4, 13};
+
+
+        alloc_aligned_tt<void> a1{alloc};
+        alloc_aligned_tt<int> a2{a1};
+        alloc_aligned_tt<char> a3{alloc};
+
+        BOOST_CHECK(a1 == a1);
+        BOOST_CHECK(a1 == a2);
+        BOOST_CHECK(a1 == a3);
+
+        BOOST_CHECK(a2 == a2);
+        BOOST_CHECK(a2 == a3);
+
+        BOOST_CHECK(a3 == a3);
+
+
+        BOOST_CHECK(!(a1 != a1));
+        BOOST_CHECK(!(a1 != a2));
+        BOOST_CHECK(!(a1 != a3));
+
+        BOOST_CHECK(!(a2 != a2));
+        BOOST_CHECK(!(a2 != a3));
+
+        BOOST_CHECK(!(a3 != a3));
+
+
+        alloc_aligned_tt<void> a1_2{alloc2};
+        alloc_aligned_tt<int> a2_2{a1_2};
+        alloc_aligned_tt<char> a3_2{alloc2};
+
+        BOOST_CHECK(a1_2 != a1);
+        BOOST_CHECK(a2_2 != a2);
+        BOOST_CHECK(a3_2 != a3);
+    }
+
+
+    BOOST_AUTO_TEST_CASE(xxx_to_std_xxx_allocator_test_02) {
+
+        gie::simple_caching_allocator alloc{4, 13};
+        gie::simple_caching_allocator alloc2{4, 13};
+
+
+        alloc_tt<void> a1{alloc};
+        alloc_tt<int> a2{a1};
+        alloc_tt<char> a3{alloc};
+
+        BOOST_CHECK(a1 == a1);
+        BOOST_CHECK(a1 == a2);
+        BOOST_CHECK(a1 == a3);
+
+        BOOST_CHECK(a2 == a2);
+        BOOST_CHECK(a2 == a3);
+
+        BOOST_CHECK(a3 == a3);
+
+
+        BOOST_CHECK(!(a1 != a1));
+        BOOST_CHECK(!(a1 != a2));
+        BOOST_CHECK(!(a1 != a3));
+
+        BOOST_CHECK(!(a2 != a2));
+        BOOST_CHECK(!(a2 != a3));
+
+        BOOST_CHECK(!(a3 != a3));
+
+
+        alloc_tt<void> a1_2{alloc2};
+        alloc_tt<int> a2_2{a1_2};
+        alloc_tt<char> a3_2{alloc2};
+
+        BOOST_CHECK(a1_2 != a1);
+        BOOST_CHECK(a2_2 != a2);
+        BOOST_CHECK(a3_2 != a3);
+    }
 
 //================================================================================================================================================
 BOOST_AUTO_TEST_SUITE_END()

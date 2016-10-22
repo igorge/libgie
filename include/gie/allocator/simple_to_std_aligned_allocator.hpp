@@ -29,6 +29,12 @@ namespace gie {
 
         template <typename T1, typename T2> friend class simple_to_std_aligned_allocator_t;
 
+        template <class T1, class T2, class CommonSimpleAllocatorT>
+        friend bool operator==(const simple_to_std_aligned_allocator_t<T1, CommonSimpleAllocatorT>& l, const simple_to_std_aligned_allocator_t<T2, CommonSimpleAllocatorT>& r);
+
+        template <class T1, class T2, class CommonSimpleAllocatorT>
+        friend bool operator!=(const simple_to_std_aligned_allocator_t<T1, CommonSimpleAllocatorT>& l, const simple_to_std_aligned_allocator_t<T2, CommonSimpleAllocatorT>& r);
+
         template <typename U>
         struct rebind {
             typedef simple_to_std_aligned_allocator_t<U, SimpleAllocatorT> other;
@@ -137,15 +143,52 @@ namespace gie {
     };
 
 
+
+    template <class SimpleAllocatorT>
+    struct simple_to_std_aligned_allocator_t<void,SimpleAllocatorT> {
+        typedef std::size_t      size_type;
+        typedef std::ptrdiff_t   difference_type;
+        typedef void*       pointer;
+        typedef const void* const_pointer;
+        typedef void        value_type;
+
+        template <typename T1, typename T2> friend class simple_to_std_aligned_allocator_t;
+
+        template <class T1, class T2, class CommonSimpleAllocatorT>
+        friend bool operator==(const simple_to_std_aligned_allocator_t<T1, CommonSimpleAllocatorT>& l, const simple_to_std_aligned_allocator_t<T2, CommonSimpleAllocatorT>& r);
+
+        template <class T1, class T2, class CommonSimpleAllocatorT>
+        friend bool operator!=(const simple_to_std_aligned_allocator_t<T1, CommonSimpleAllocatorT>& l, const simple_to_std_aligned_allocator_t<T2, CommonSimpleAllocatorT>& r);
+
+
+        explicit simple_to_std_aligned_allocator_t(SimpleAllocatorT& simple_allocator)
+                : m_simple_allocator(simple_allocator)
+        {
+        };
+
+
+        template <class U>
+        simple_to_std_aligned_allocator_t(simple_to_std_non_aligned_allocator_t<U, SimpleAllocatorT>const & other)
+                : simple_to_std_aligned_allocator_t(other.m_simple_allocator)
+        {
+        }
+
+        template <typename U>
+        struct rebind {
+            typedef simple_to_std_aligned_allocator_t<U, SimpleAllocatorT> other;
+        };
+
+    private:
+        SimpleAllocatorT& m_simple_allocator;
+    };
+
     template <class T, class U, class SimpleAllocatorT>
     bool operator==(const simple_to_std_aligned_allocator_t<T, SimpleAllocatorT>& l, const simple_to_std_aligned_allocator_t<U, SimpleAllocatorT>& r){
-        GIE_DEBUG_TRACE();
         return static_cast<void*>(&l.m_simple_allocator) == static_cast<void*>(&r.m_simple_allocator);
     };
 
     template <class T, class U, class SimpleAllocatorT>
     bool operator!=(const simple_to_std_aligned_allocator_t<T, SimpleAllocatorT>& l, const simple_to_std_aligned_allocator_t<U, SimpleAllocatorT>& r){
-        GIE_DEBUG_TRACE();
         return static_cast<void*>(&l.m_simple_allocator) != static_cast<void*>(&r.m_simple_allocator);
     };
 
