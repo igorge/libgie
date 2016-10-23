@@ -86,7 +86,7 @@ namespace gie {
 
 //              trace_buckets_();
 
-              //GIE_DEBUG_IF_LOG(m_alive_objects>1024, "WARNING: To many alive objects: "<<m_alive_objects);
+//              GIE_DEBUG_IF_LOG(m_alive_objects>1024, "WARNING: To many alive objects: "<<m_alive_objects);
 
               int const idx = bucket_idx_from_size_(size);
               if(idx==-1){
