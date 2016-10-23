@@ -19,7 +19,7 @@
 #include <boost/optional.hpp>
 //================================================================================================================================================
 namespace gie {
-    template <class KeyT, class T, template <class...> class AllocatorTT, class... AllocatorTTTemplateParams>
+    template <class KeyT, class T, class AllocatorT>
     struct lru_t {
 
 
@@ -46,8 +46,7 @@ namespace gie {
             T    value;
         };
 
-        typedef AllocatorTT<value_type, AllocatorTTTemplateParams...> allocator_t;
-
+        typedef typename std::allocator_traits<AllocatorT>::template rebind_alloc<value_type> allocator_t;
 
 
         typedef boost::multi_index_container<

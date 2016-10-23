@@ -14,11 +14,11 @@
 BOOST_AUTO_TEST_SUITE(caching_istream_iterator_tests )
 //================================================================================================================================================
 
-//    template <class T> using allocator_t = gie::simple_to_std_allocator_t<T, gie::simple_caching_allocator>;
-//    gie::simple_caching_allocator simple_alloc{4,13};
+    using allocator_t = gie::simple_to_std_allocator_t<void, gie::simple_caching_allocator>;
+    gie::simple_caching_allocator simple_alloc{4,13};
 
-    template <class T> using allocator_t = std::allocator<T>;
-    allocator_t<void> simple_alloc{};
+//    using allocator_t = std::allocator<void>;
+//    allocator_t simple_alloc{};
     
     
     
@@ -32,7 +32,7 @@ BOOST_AUTO_TEST_SUITE(caching_istream_iterator_tests )
 
         BOOST_TEST( input_stream.good() );
 
-        gie::impl::caching_istream_iterator_shared_t<allocator_t> imp1{ allocator_t<char>{simple_alloc}, input_stream, 2, 2};
+        gie::impl::caching_istream_iterator_shared_t<allocator_t> imp1{ allocator_t{simple_alloc}, input_stream, 2, 2};
 
         auto r = imp1.get_page(0);
         BOOST_TEST(r->size()==2);
@@ -95,7 +95,7 @@ BOOST_AUTO_TEST_SUITE(caching_istream_iterator_tests )
 
         BOOST_TEST( input_stream.good() );
 
-        gie::impl::caching_istream_iterator_shared_t<allocator_t> imp1{allocator_t<char>{simple_alloc}, input_stream, 2, 2};
+        gie::impl::caching_istream_iterator_shared_t<allocator_t> imp1{allocator_t{simple_alloc}, input_stream, 2, 2};
 
 
         auto r = imp1.get_page(2);
@@ -127,7 +127,7 @@ BOOST_AUTO_TEST_SUITE(caching_istream_iterator_tests )
 
         BOOST_TEST( input_stream.good() );
 
-        auto r = gie::make_istream_range( allocator_t<char>{simple_alloc}, input_stream, 2, 10 );
+        auto r = gie::make_istream_range( allocator_t{simple_alloc}, input_stream, 2, 10 );
 
         GIE_CHECK(r.end() == r.end());
         GIE_CHECK( r.begin()==r.end() );
@@ -143,7 +143,7 @@ BOOST_AUTO_TEST_SUITE(caching_istream_iterator_tests )
 
         BOOST_TEST( input_stream.good() );
 
-        auto r = gie::make_istream_range(allocator_t<char>{simple_alloc}, input_stream,  2, 10  );
+        auto r = gie::make_istream_range(allocator_t{simple_alloc}, input_stream,  2, 10  );
 
         BOOST_CHECK(r.end() == r.end());
         BOOST_CHECK( r.begin()!=r.end() );
@@ -166,7 +166,7 @@ BOOST_AUTO_TEST_SUITE(caching_istream_iterator_tests )
 
         BOOST_TEST(input_stream.good());
 
-        auto r = gie::make_istream_range(allocator_t<char>{simple_alloc}, input_stream, 2, 10);
+        auto r = gie::make_istream_range(allocator_t{simple_alloc}, input_stream, 2, 10);
 
         BOOST_CHECK(r.end() == r.end());
         BOOST_CHECK(r.begin() != r.end());
@@ -189,13 +189,6 @@ BOOST_AUTO_TEST_SUITE(caching_istream_iterator_tests )
     }
 
 
-    template <class T> using allocator_2t = gie::simple_to_std_allocator_t<T, gie::simple_caching_allocator>;
-    gie::simple_caching_allocator simple_alloc2{4,13};
-
-//    template <class T> using allocator_2t = std::allocator<T>;
-//    allocator_2t<void> simple_alloc2{};
-
-
     BOOST_AUTO_TEST_CASE( test06 ) {
 
         std::vector<char> data = {42,43,3};
@@ -205,7 +198,7 @@ BOOST_AUTO_TEST_SUITE(caching_istream_iterator_tests )
 
         BOOST_TEST(input_stream.good());
 
-        auto r = gie::make_istream_range<allocator_2t>(allocator_2t<char>{simple_alloc2}, input_stream, 2, 10);
+        auto r = gie::make_istream_range<allocator_t>(allocator_t{simple_alloc}, input_stream, 2, 10);
 
         BOOST_CHECK(r.end() == r.end());
         BOOST_CHECK(r.begin() != r.end());

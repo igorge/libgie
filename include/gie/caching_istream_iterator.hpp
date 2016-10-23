@@ -26,7 +26,7 @@ namespace gie {
 
     namespace impl {
 
-        template <template <class> class AllocatorTT>
+        template <class AllocatorT>
         struct caching_istream_iterator_shared_t {
 
             using page_index_t = unsigned int;
@@ -38,10 +38,9 @@ namespace gie {
             caching_istream_iterator_shared_t(caching_istream_iterator_shared_t &&) = delete;
             caching_istream_iterator_shared_t& operator=(caching_istream_iterator_shared_t const&) = delete;
 
-            template<class T>
-            using allocator_t = AllocatorTT<T>;
+            using allocator_t = AllocatorT;
 
-            using page_type =  std::vector<char,allocator_t<char> >;
+            using page_type =  std::vector<char, typename std::allocator_traits<AllocatorT>::template rebind_alloc<char> >;
             using shared_page_type = boost::shared_ptr< page_type >;
             using lru_type = lru_t<page_index_t, shared_page_type, allocator_t>;
 
@@ -194,7 +193,7 @@ namespace gie {
                 return m + (r==0?0:1);
             }
 
-            allocator_t<page_type> m_allocator;
+            allocator_t m_allocator;
             std::istream& m_is;
             size_t const m_page_size;
             streamsize_t const m_stream_size;
@@ -207,18 +206,15 @@ namespace gie {
     }
 
 
-    template < template <class> class AllocatorTT>
+    template <class AllocatorT>
     struct caching_istream_iterator_t
-            : boost::iterator_facade<caching_istream_iterator_t<AllocatorTT>, char, boost::forward_traversal_tag, char const&>
+            : boost::iterator_facade<caching_istream_iterator_t<AllocatorT>, char, boost::forward_traversal_tag, char const&>
     {
         friend class boost::iterator_core_access;
 
-        using self_type = caching_istream_iterator_t<AllocatorTT>;
+        using self_type = caching_istream_iterator_t<AllocatorT>;
 
-        template <class T>
-        using allocator_tt = AllocatorTT<T>;
-
-        typedef impl::caching_istream_iterator_shared_t<allocator_tt> impl_type;
+        typedef impl::caching_istream_iterator_shared_t<AllocatorT> impl_type;
         typedef boost::shared_ptr<impl_type> shared_impl_type;
 
         typedef typename impl_type::streampos_t  position_t;
@@ -319,11 +315,11 @@ namespace gie {
     };
 
 
-    template < template <class> class AllocatorTT, class T>
-     auto make_istream_range(AllocatorTT<T> const& allocator, std::istream& is, size_t const page_size, typename caching_istream_iterator_t<AllocatorTT>::page_count_t const pages_to_cache){
+    template < class AllocatorT>
+     auto make_istream_range(AllocatorT && allocator, std::istream& is, size_t const page_size, typename caching_istream_iterator_t<AllocatorT>::page_count_t const pages_to_cache){
         return boost::make_iterator_range(
-                caching_istream_iterator_t<AllocatorTT>{allocator, is, page_size, pages_to_cache},
-                caching_istream_iterator_t<AllocatorTT>{} );
+                caching_istream_iterator_t<AllocatorT>{ std::forward<AllocatorT>(allocator), is, page_size, pages_to_cache},
+                caching_istream_iterator_t<AllocatorT>{} );
     }
 }
 //================================================================================================================================================
