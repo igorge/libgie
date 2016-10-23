@@ -8,6 +8,7 @@
 //================================================================================================================================================
 #pragma once
 //================================================================================================================================================
+#include "gie/simple_to_std_allocator.hpp"
 #include "gie/type_util.hpp"
 #include "gie/allocator/construct_new.hpp"
 #include "gie/simple_lru.hpp"
@@ -25,7 +26,7 @@ namespace gie {
 
     namespace impl {
 
-        template <template <class...> class AllocatorTT, class... AllocatorTTTemplateParams>
+        template <template <class> class AllocatorTT>
         struct caching_istream_iterator_shared_t {
 
             using page_index_t = unsigned int;
@@ -38,7 +39,7 @@ namespace gie {
             caching_istream_iterator_shared_t& operator=(caching_istream_iterator_shared_t const&) = delete;
 
             template<class T>
-            using allocator_t = AllocatorTT<T, AllocatorTTTemplateParams...>;
+            using allocator_t = AllocatorTT<T>;
 
             using page_type =  std::vector<char,allocator_t<char> >;
             using shared_page_type = boost::shared_ptr< page_type >;
@@ -99,6 +100,10 @@ namespace gie {
 
                 return {m,r};
             };
+
+            auto& get_allocator(){
+                return m_allocator;
+            }
 
 
         private:
@@ -202,29 +207,35 @@ namespace gie {
     }
 
 
+    template < template <class> class AllocatorTT>
     struct caching_istream_iterator_t
-            : boost::iterator_facade<caching_istream_iterator_t, char, boost::forward_traversal_tag, char const&>
+            : boost::iterator_facade<caching_istream_iterator_t<AllocatorTT>, char, boost::forward_traversal_tag, char const&>
     {
         friend class boost::iterator_core_access;
 
+        using self_type = caching_istream_iterator_t<AllocatorTT>;
 
-        typedef impl::caching_istream_iterator_shared_t<std::allocator> impl_type;
+        template <class T>
+        using allocator_tt = AllocatorTT<T>;
+
+        typedef impl::caching_istream_iterator_shared_t<allocator_tt> impl_type;
         typedef boost::shared_ptr<impl_type> shared_impl_type;
 
-        typedef impl_type::streampos_t  position_t;
-        typedef impl_type::page_count_t page_count_t;
-        typedef impl_type::page_index_t page_index_t;
-        typedef impl_type::shared_page_type shared_page_type;
+        typedef typename impl_type::streampos_t  position_t;
+        typedef typename impl_type::page_count_t page_count_t;
+        typedef typename impl_type::page_index_t page_index_t;
+        typedef typename impl_type::shared_page_type shared_page_type;
 
         caching_istream_iterator_t(){};
 
-        caching_istream_iterator_t(std::istream& is, size_t const p_page_size, page_count_t const p_cache_page_count)
-                : m_impl( make_shared(std::allocator<void>(), is, p_page_size, p_cache_page_count) )
+        template <class AnyCompatibleAllocator>
+        caching_istream_iterator_t(AnyCompatibleAllocator && p_allocator, std::istream& is, size_t const p_page_size, page_count_t const p_cache_page_count)
+                : m_impl(make_shared_(std::forward<AnyCompatibleAllocator>(p_allocator), is, p_page_size, p_cache_page_count) )
         {
         };
 
 
-        bool equal(caching_istream_iterator_t const& other)const{
+        bool equal(self_type const& other)const{
 
             if(this->m_impl == nullptr) { // normalize: l - iter, r - end marker
                 if( other.m_impl== nullptr ) return true;
@@ -263,7 +274,7 @@ namespace gie {
         }
 
 
-        reference dereference()const{
+        typename self_type::reference dereference()const{
             assert(m_impl);
             assert(m_position < m_impl->stream_size());
             assert(m_rel_position < m_impl->page_size());
@@ -277,15 +288,18 @@ namespace gie {
 
     private:
 
-        template <class AnyCompatibleAllocator>
-        static shared_impl_type make_shared(AnyCompatibleAllocator && p_allocator, std::istream& p_is, size_t const p_page_size, page_count_t const p_cache_page_count){
+//        auto& get_allocator()const{
+//            assert(m_impl);
+//            return m_impl->get_allocator();
+//        }
 
+        template <class AnyCompatibleAllocator>
+        static shared_impl_type make_shared_(AnyCompatibleAllocator const& p_allocator, std::istream& p_is, size_t const p_page_size, page_count_t const p_cache_page_count){
             auto * const raw_impl = gie::construct_new<impl_type>(p_allocator, p_allocator, p_is, p_page_size, p_cache_page_count);
             shared_impl_type impl{raw_impl, [alloc = p_allocator](impl_type * pointer){gie::destroy_free(alloc, pointer);} };
             return impl;
         }
 
-    private:
         void lazy_load_page_()const{
             if(!m_current_page){
                 auto const idx = m_impl->get_page_index_from_position(m_position);
@@ -302,12 +316,14 @@ namespace gie {
         mutable shared_page_type m_current_page = nullptr;
 
         shared_impl_type m_impl;
-
     };
 
 
-     auto make_istream_range(std::istream& is, size_t const page_size, caching_istream_iterator_t::page_count_t const pages_to_cache){
-        return boost::make_iterator_range( caching_istream_iterator_t{is, page_size, pages_to_cache}, caching_istream_iterator_t{} );
+    template < template <class> class AllocatorTT, class T>
+     auto make_istream_range(AllocatorTT<T> const& allocator, std::istream& is, size_t const page_size, typename caching_istream_iterator_t<AllocatorTT>::page_count_t const pages_to_cache){
+        return boost::make_iterator_range(
+                caching_istream_iterator_t<AllocatorTT>{allocator, is, page_size, pages_to_cache},
+                caching_istream_iterator_t<AllocatorTT>{} );
     }
 }
 //================================================================================================================================================

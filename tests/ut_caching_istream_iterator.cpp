@@ -127,7 +127,7 @@ BOOST_AUTO_TEST_SUITE(caching_istream_iterator_tests )
 
         BOOST_TEST( input_stream.good() );
 
-        auto r = gie::make_istream_range( input_stream, 2, 10 );
+        auto r = gie::make_istream_range( allocator_t<char>{simple_alloc}, input_stream, 2, 10 );
 
         GIE_CHECK(r.end() == r.end());
         GIE_CHECK( r.begin()==r.end() );
@@ -143,7 +143,7 @@ BOOST_AUTO_TEST_SUITE(caching_istream_iterator_tests )
 
         BOOST_TEST( input_stream.good() );
 
-        auto r = gie::make_istream_range( input_stream,  2, 10  );
+        auto r = gie::make_istream_range(allocator_t<char>{simple_alloc}, input_stream,  2, 10  );
 
         BOOST_CHECK(r.end() == r.end());
         BOOST_CHECK( r.begin()!=r.end() );
@@ -166,7 +166,7 @@ BOOST_AUTO_TEST_SUITE(caching_istream_iterator_tests )
 
         BOOST_TEST(input_stream.good());
 
-        auto r = gie::make_istream_range(input_stream, 2, 10);
+        auto r = gie::make_istream_range(allocator_t<char>{simple_alloc}, input_stream, 2, 10);
 
         BOOST_CHECK(r.end() == r.end());
         BOOST_CHECK(r.begin() != r.end());
@@ -179,10 +179,59 @@ BOOST_AUTO_TEST_SUITE(caching_istream_iterator_tests )
 
         auto b = i;
 
+        BOOST_CHECK(b == i);
+
         ++i;
         BOOST_CHECK(i != r.begin());
         BOOST_CHECK(i == r.end());
         BOOST_CHECK(r.end() == i);
+
+    }
+
+
+    template <class T> using allocator_2t = gie::simple_to_std_allocator_t<T, gie::simple_caching_allocator>;
+    gie::simple_caching_allocator simple_alloc2{4,13};
+
+//    template <class T> using allocator_2t = std::allocator<T>;
+//    allocator_2t<void> simple_alloc2{};
+
+
+    BOOST_AUTO_TEST_CASE( test06 ) {
+
+        std::vector<char> data = {42,43,3};
+
+        boost::iostreams::basic_array<char> source(data.data(), data.size());
+        boost::iostreams::stream<boost::iostreams::basic_array<char> > input_stream(source);
+
+        BOOST_TEST(input_stream.good());
+
+        auto r = gie::make_istream_range<allocator_2t>(allocator_2t<char>{simple_alloc2}, input_stream, 2, 10);
+
+        BOOST_CHECK(r.end() == r.end());
+        BOOST_CHECK(r.begin() != r.end());
+        BOOST_CHECK(r.end() != r.begin());
+
+        auto i = r.begin();
+
+        BOOST_CHECK(i == r.begin());
+
+
+        BOOST_CHECK(i != r.end());
+        BOOST_TEST(*i == 42);
+        ++i;
+        BOOST_CHECK(i != r.end());
+
+
+        BOOST_CHECK(i != r.end());
+        BOOST_TEST(*i == 43);
+        ++i;
+        BOOST_CHECK(i != r.end());
+
+
+        BOOST_CHECK(i != r.end());
+        BOOST_TEST(*i == 3);
+        ++i;
+        BOOST_CHECK(i == r.end());
 
     }
 
