@@ -36,14 +36,14 @@ namespace gie { namespace debug {
 		tracer(char const * const file, unsigned int const line, char const * const func)
 			: m_file( file )
 			, m_line( line )
-			, m_func( func ) {
-			GIE_DEBUG_LOG_EXT("--> "<<m_func, m_file, m_line);
-			//STCRYPT_LOG_INC_LEVEL();
+			, m_func( func )
+		{
+			GIE_DEBUG_LOG_EXT("enter> "<<m_func, m_file, m_line);
 		}
-		~tracer(){
 
-			//STCRYPT_LOG_DEC_LEVEL();
-			GIE_DEBUG_LOG_EXT("<-- "<<m_func, m_file, m_line);
+		~tracer()
+        {
+			GIE_DEBUG_LOG_EXT("<exit  "<<m_func, m_file, m_line);
 		}
 	private:
 		char const * const m_file;
