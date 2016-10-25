@@ -42,6 +42,7 @@ namespace gie {
 
             using page_type =  std::vector<char, typename std::allocator_traits<AllocatorT>::template rebind_alloc<char> >;
             using shared_page_type = boost::shared_ptr< page_type >;
+            using weak_shared_page_type = boost::weak_ptr< page_type >;
             using lru_type = lru_t<page_index_t, shared_page_type, allocator_t>;
 
 
@@ -221,6 +222,7 @@ namespace gie {
         typedef typename impl_type::page_count_t page_count_t;
         typedef typename impl_type::page_index_t page_index_t;
         typedef typename impl_type::shared_page_type shared_page_type;
+        typedef typename impl_type::weak_shared_page_type weak_shared_page_type;
 
         caching_istream_iterator_t(){};
 
@@ -250,20 +252,20 @@ namespace gie {
             return m_position==other.m_position;
         }
 
-
         void increment(){
             assert(m_impl);
             assert(m_position < m_impl->stream_size());
             assert(m_rel_position < m_impl->page_size());
 
             ++m_position;
-            ++m_rel_position;
 
-            if(m_current_page){
-                assert(m_rel_position <= m_current_page->size());
+            if(auto const page = m_current_page.lock()){
+                ++m_rel_position;
 
-                if(m_rel_position==m_current_page->size()){
-                    m_current_page = nullptr;
+                assert(m_rel_position <= page->size());
+
+                if(m_rel_position==page->size()){
+                    m_current_page.reset();
                     m_rel_position = 0;
                 }
             }
@@ -275,10 +277,10 @@ namespace gie {
             assert(m_position < m_impl->stream_size());
             assert(m_rel_position < m_impl->page_size());
 
-            lazy_load_page_();
-            assert(m_rel_position < m_current_page->size());
+            auto const& page = lazy_load_page_();
+            assert(m_rel_position < page->size());
 
-            return (*m_current_page)[m_rel_position];
+            return (*page)[m_rel_position];
         }
 
 
@@ -296,20 +298,23 @@ namespace gie {
             return impl;
         }
 
-        void lazy_load_page_()const{
-            if(!m_current_page){
+        shared_page_type lazy_load_page_()const{
+            if(auto current_page = m_current_page.lock()){
+                return current_page;
+            } else {
                 auto const idx = m_impl->get_page_index_from_position(m_position);
-                m_current_page = m_impl->get_page(idx.first);
+                auto page = m_impl->get_page(idx.first);
+                m_current_page = page;
                 m_rel_position = idx.second;
-            }
-
+                return page;
+            };
         }
 
     private:
 
         position_t m_position = 0;
         mutable size_t     m_rel_position = 0;
-        mutable shared_page_type m_current_page = nullptr;
+        mutable weak_shared_page_type m_current_page;
 
         shared_impl_type m_impl;
     };

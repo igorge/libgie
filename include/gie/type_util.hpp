@@ -9,7 +9,10 @@
 #pragma once
 //================================================================================================================================================
 #include <boost/integer.hpp>
+
 #include <limits>
+#include <type_traits>
+#include <algorithm>
 //================================================================================================================================================
 namespace gie {
 
@@ -22,6 +25,12 @@ namespace gie {
     };
 
 
+    template <class T>
+    constexpr unsigned int bits_count(){
+        static_assert( std::is_integral<T>::value );
+        return (std::numeric_limits<T>::is_signed?1:0) + std::numeric_limits<T>::digits;
+    }
+
     template <class T, class U>
     struct uint_can_hold_digits {
 
@@ -33,8 +42,22 @@ namespace gie {
         typedef typename boost::uint_t<std::max(d1,d2)>::fast type;
 
         static_assert(require_same_radix<T,type>());
-
     };
+
+
+    template <class T, class U>
+    struct uint_max_t {
+
+        static_assert(require_same_radix<T,U>());
+
+        constexpr static auto d1 = bits_count<T>();
+        constexpr static auto d2 = bits_count<U>();
+
+        typedef typename boost::uint_t<std::max(d1,d2)>::fast type;
+
+        static_assert(require_same_radix<T,type>());
+    };
+
 
 }
 //================================================================================================================================================
