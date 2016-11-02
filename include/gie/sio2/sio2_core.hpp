@@ -12,6 +12,7 @@
 #include <cinttypes>
 #include <limits>
 #include <utility>
+#include <array>
 //================================================================================================================================================
 namespace gie { namespace sio2 {
 
@@ -44,6 +45,21 @@ namespace gie { namespace sio2 {
         as(T& value){
             return as_t<TTag, T>{ value };
         }
+
+        template <class TTag, class T>
+        struct as_array_of_t {
+            typedef TTag target_type_tag;
+            typedef T source_type;
+
+            T& value;
+        };
+
+        template <class TTag, class T>
+        as_array_of_t<TTag, T>
+        as_array_of(T& value){
+            return as_array_of_t<TTag, T>{ value };
+        }
+
 
         std::uint_fast8_t const octet_mask=0xFF;
 
@@ -104,18 +120,30 @@ namespace gie { namespace sio2 {
 
 
 
+        template <class Stream, class T, std::size_t N>
+        void serialize(std::array<T, N> & v, Stream& stream){
+            for(auto && i : v){
+                stream(i);
+            }
+        }
+
+        template <class Stream, class Tag, class T, std::size_t N>
+        void serialize(as_array_of_t<Tag, std::array<T, N> > && v, Stream& stream){
+            for(auto && i : v.value){
+                stream( as<Tag>(i) );
+            }
+        }
+
 
         template <class WriteStream, class T>
-        void serialize_out(T& v, WriteStream& write_stream){
-            return serialize(v, write_stream);
+        void serialize_out(T&& v, WriteStream& write_stream){
+            return serialize (std::forward<T>(v), write_stream);
         }
 
         template <class ReaderStream, class T>
-        void serialize_in(T& v, ReaderStream& read_stream){
-            return serialize(v, read_stream);
+        void serialize_in(T&& v, ReaderStream& read_stream){
+            return serialize (std::forward<T>(v), read_stream);
         }
-
-
 
 
 

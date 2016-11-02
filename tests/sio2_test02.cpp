@@ -105,6 +105,78 @@ namespace test2 {
 }
 
 
+BOOST_AUTO_TEST_CASE( sio2_array_read_write_01 )
+{
+
+    typedef std::vector<unsigned char> container_t;
+
+    container_t container;
+
+    {
+        sio2::push_back_writer_t<container_t> os{container};
+
+        std::array<test2::s_t,3> s{3,2,1};
+
+        os(s);
+
+        BOOST_TEST( container.size() == 3);
+        BOOST_TEST( container.at(0) == 3);
+        BOOST_TEST( container.at(1) == 2);
+        BOOST_TEST( container.at(2) == 1);
+
+    }
+
+    {
+        sio2::range_reader_t<container_t> is{container};
+
+        std::array<test2::s_t,3> s{0,0,0};
+        is(s);
+
+        BOOST_TEST(s[0].u8_v==3);
+        BOOST_TEST(s[1].u8_v==2);
+        BOOST_TEST(s[2].u8_v==1);
+    }
+
+}
+
+
+
+BOOST_AUTO_TEST_CASE( sio2_array_as_read_write_02 )
+{
+
+    typedef std::vector<unsigned char> container_t;
+
+    container_t container;
+
+    {
+        sio2::push_back_writer_t <container_t> os{container};
+
+        std::array<unsigned int, 3> s{3, 2, 1};
+
+        os(sio2::as_array_of<sio2::tag::octet>(s));
+
+        BOOST_TEST( container.size() == 3);
+        BOOST_TEST( container.at(0) == 3);
+        BOOST_TEST( container.at(1) == 2);
+        BOOST_TEST( container.at(2) == 1);
+
+    }
+
+    {
+        sio2::range_reader_t <container_t> is{container};
+
+        std::array<unsigned int, 3> s{0, 0, 0};
+
+        is(sio2::as_array_of<sio2::tag::octet>(s));
+
+        BOOST_TEST(s[0]==3);
+        BOOST_TEST(s[1]==2);
+        BOOST_TEST(s[2]==1);
+    }
+}
+
+
+
 BOOST_AUTO_TEST_CASE( sio2_struct_01 )
 {
     typedef std::vector<std::uint8_t> container_t;
