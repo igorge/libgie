@@ -119,9 +119,17 @@ namespace gie { namespace sio2 {
         }
 
 
-
+        // std::array & T[N] array serialize
+        //
         template <class Stream, class T, std::size_t N>
         void serialize(std::array<T, N> & v, Stream& stream){
+            for(auto && i : v){
+                stream(i);
+            }
+        }
+
+        template <class Stream, class T, std::size_t N>
+        void serialize(T (&v)[N], Stream& stream){
             for(auto && i : v){
                 stream(i);
             }
@@ -134,7 +142,16 @@ namespace gie { namespace sio2 {
             }
         }
 
+        template <class Stream, class Tag, class T, std::size_t N>
+        void serialize(as_array_of_t<Tag, T[N]> && v, Stream& stream){
+            for(auto && i : v.value){
+                stream( as<Tag>(i) );
+            }
+        }
 
+
+        // dispatch serialize_[in|out] via generic serialize
+        //
         template <class WriteStream, class T>
         void serialize_out(T&& v, WriteStream& write_stream){
             return serialize (std::forward<T>(v), write_stream);
