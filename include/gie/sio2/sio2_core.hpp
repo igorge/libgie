@@ -29,6 +29,8 @@ namespace gie { namespace sio2 {
 
             struct integral_type : type_tag {};
             struct octet : integral_type {};
+            struct int16_le : integral_type {};
+            struct uint16_le : integral_type {};
             struct int32_le : integral_type {};
             struct uint32_le : integral_type {};
 
@@ -204,10 +206,74 @@ namespace gie { namespace sio2 {
             v.value = read_stream.read();
         }
 
+
+        // out -- uint16_le
+        template <class WriteStream, class T>
+        void serialize_out(as_t<tag::uint16_le, T>&& v, WriteStream& write_stream){
+            static_assert(impl::require_integral<T>());
+            static_assert(!std::numeric_limits<T>::is_signed);
+            static_assert(std::numeric_limits<T>::digits>=16);
+
+            constexpr auto r_shift = (std::numeric_limits<T>::digits-8);
+            write_stream.write( (v.value << (std::numeric_limits<T>::digits-8)) >> r_shift  );
+            write_stream.write( (v.value << (std::numeric_limits<T>::digits-16)) >> r_shift );
+        }
+
+        // in -- uint16_le
+        template <class ReadStream, class T>
+        void serialize_in(as_t<tag::uint16_le, T>&& v, ReadStream& read_stream){
+            static_assert(impl::require_integral<T>());
+            static_assert(!std::numeric_limits<T>::is_signed);
+            static_assert(std::numeric_limits<T>::digits>=16);
+
+            T const o1 = read_stream.read();
+            T const o2 = read_stream.read();
+
+            v.value =  ( o1 | (o2<<8) );
+        };
+
+
+        // out -- int16_le
+        template <class WriteStream, class T>
+        void serialize_out(as_t<tag::int16_le, T>&& v, WriteStream& write_stream){
+            static_assert (impl::require_integral<T>());
+            static_assert (std::numeric_limits<T>::is_signed);
+            static_assert (gie::bits_count<T>()>=16);
+
+            using u_t = typename uint_from_int<T>::type;
+            static_assert( impl::require_integral<u_t>() );
+
+            serialize_out(as<tag::uint16_le>(static_cast<u_t>(v.value) ), write_stream);
+
+        }
+
+        // in -- int16_le
+        template <class ReadStream, class T>
+        void serialize_in(as_t<tag::int16_le, T>&& v, ReadStream& read_stream){
+            static_assert (impl::require_integral<T>());
+            static_assert (std::numeric_limits<T>::is_signed);
+            static_assert (gie::bits_count<T>()>=16);
+
+            using u_t = typename uint_from_int<T>::type;
+            static_assert( impl::require_integral<u_t>() );
+
+            u_t const o1 = read_stream.read();
+            u_t const o2 = read_stream.read();
+
+            if(o2 & 0b10000000) { //signed
+                v.value = impl::pad_high_bits_with_one<16> ( o1 | (o2<<8) ) ;
+            } else {
+                v.value = ( o1 | (o2<<8) );
+            }
+
+        };
+
+
+
         // out -- uint32_le
         template <class WriteStream, class T>
         void serialize_out(as_t<tag::uint32_le, T>&& v, WriteStream& write_stream){
-            impl::require_integral<T>();
+            static_assert(impl::require_integral<T>());
             static_assert(!std::numeric_limits<T>::is_signed);
             static_assert(std::numeric_limits<T>::digits>=32);
 
@@ -221,7 +287,7 @@ namespace gie { namespace sio2 {
         // in -- uint32_le
         template <class ReadStream, class T>
         void serialize_in(as_t<tag::uint32_le, T>&& v, ReadStream& read_stream){
-            impl::require_integral<T>();
+            static_assert(impl::require_integral<T>());
             static_assert(!std::numeric_limits<T>::is_signed);
             static_assert(std::numeric_limits<T>::digits>=32);
 
