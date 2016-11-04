@@ -46,8 +46,8 @@ namespace gie { namespace sio2 {
 
             template <class RangeT>
             range_reader_t(RangeT const & range)
-                : m_current(range.cbegin())
-                , m_end(range.cend())
+                : m_current(std::begin(range))
+                , m_end(std::end(range))
             {
 
             }
@@ -57,6 +57,12 @@ namespace gie { namespace sio2 {
             iterator_type const m_end;
 
         };
+
+        template <class RangeT>
+        range_reader_t<RangeT>
+        range_reader(RangeT && range){
+            return { std::forward<RangeT>(range) };
+        }
 
 
     } }
