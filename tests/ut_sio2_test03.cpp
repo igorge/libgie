@@ -114,6 +114,42 @@ BOOST_AUTO_TEST_SUITE( sio2_test_suite03 )
 
     }
 
+
+
+
+    BOOST_AUTO_TEST_CASE( test_integer4 )
+    {
+
+        typedef std::vector<unsigned char> container_t;
+
+        for(unsigned int i = 0; i< 1024; ++i){
+
+            container_t container;
+
+            std::int64_t const v_const = rand() - rand();
+
+            {
+                sio2::push_back_writer_t<container_t> os{container};
+
+
+                std::int64_t v = v_const;
+                os(sio2::as<sio2::tag::int32_le>(v));
+
+                BOOST_TEST(container.size() == 4);
+            }
+
+            {
+                sio2::range_reader_t<container_t> is{container};
+
+                std::int64_t v = 0;
+                is(sio2::as<sio2::tag::int32_le>(v));
+
+                BOOST_TEST(v == v_const);
+            }
+        }
+
+    }
+
 //================================================================================================================================================
 BOOST_AUTO_TEST_SUITE_END()
 //================================================================================================================================================
