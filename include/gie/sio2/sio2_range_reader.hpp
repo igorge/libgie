@@ -21,7 +21,7 @@ namespace gie { namespace sio2 {
         struct range_reader_t {
 
             typedef typename boost::range_value<ForwardRangeT const>::type value_type;
-            typedef typename boost::uint_t< impl::bits_count<value_type>() >::fast unsigned_value_type; // can hold all bits of value_type
+            typedef typename boost::uint_t< gie::bits_count<value_type>() >::fast unsigned_value_type; // can hold all bits of value_type
             typedef typename boost::range_iterator<ForwardRangeT const>::type iterator_type;
             typedef std::uint_fast8_t octet_type;
 

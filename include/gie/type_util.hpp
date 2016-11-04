@@ -25,12 +25,20 @@ namespace gie {
     };
 
 
+    //return number of bits in a T (including sign)
     template <class T>
     constexpr unsigned int bits_count(){
         static_assert( std::is_integral<T>::value );
         return (std::numeric_limits<T>::is_signed?1:0) + std::numeric_limits<T>::digits;
     }
 
+    // returns unsigned type capable of holding T values
+    template <class T>
+    struct uint_from_int{
+        typedef typename boost::uint_t<bits_count<T>()>::fast type;
+    };
+
+    // returns unsigned integral type that is capable of holding T and U positive bits (not counting sign value if any)
     template <class T, class U>
     struct uint_can_hold_digits {
 
@@ -45,6 +53,7 @@ namespace gie {
     };
 
 
+    // returns unsigned integral type that is capable of holding T and U value
     template <class T, class U>
     struct uint_max_t {
 

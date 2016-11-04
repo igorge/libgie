@@ -8,6 +8,8 @@
 //================================================================================================================================================
 #pragma once
 //================================================================================================================================================
+#include "gie/type_util.hpp"
+
 #include <type_traits>
 #include <cinttypes>
 #include <limits>
@@ -43,7 +45,13 @@ namespace gie { namespace sio2 {
         template <class TTag, class T>
         typename std::enable_if<std::is_convertible<TTag, tag::type_tag>::value , as_t<TTag, T> >::type
         as(T& value){
-            return as_t<TTag, T>{ value };
+            return { value };
+        }
+
+        template <class TTag, class T>
+        typename std::enable_if<std::is_convertible<TTag, tag::type_tag>::value , as_t<TTag, T const> >::type
+        as(T&& value){
+            return { value };
         }
 
         template <class TTag, class T>
@@ -66,15 +74,10 @@ namespace gie { namespace sio2 {
         namespace impl {
 
             template <class T>
-            constexpr void require_integral(){
+            constexpr bool require_integral(){
                 static_assert(std::is_integral<T>::value, "should be integral type");
                 static_assert(std::numeric_limits<T>::radix==2, "the only one radix");
-            }
-
-            template <class T>
-            constexpr int bits_count(){
-                require_integral<T>();
-                return (std::numeric_limits<T>::is_signed?1:0) + std::numeric_limits<T>::digits;
+                return true;
             }
 
             template <class T>
@@ -115,6 +118,28 @@ namespace gie { namespace sio2 {
                 require_octet<T>();
                 return value & static_cast<T>(octet_mask);
             }
+
+
+
+            template <unsigned int bits_count, class T>
+            typename std::enable_if< gie::bits_count<T>() <= bits_count, T>::type // nothing to pad
+            pad_high_bits_with_one(T const& v){
+                return v;
+            };
+
+            template <unsigned int bits_count, class T>
+            typename std::enable_if< (gie::bits_count<T>() > bits_count), T>::type
+            pad_high_bits_with_one(T const& v){
+
+                static_assert ( require_integral<T>() );
+                static_assert ( !std::numeric_limits<T>::is_signed );
+
+                auto const bits_to_pad = gie::bits_count<T>() - bits_count;
+                static_assert (bits_to_pad > 0);
+                static_assert (bits_count < gie::bits_count<T>());
+
+                return { ((std::numeric_limits<T>::max() >> bits_count) << bits_count) | v };
+            };
 
         }
 
@@ -206,6 +231,44 @@ namespace gie { namespace sio2 {
             T const o4 = read_stream.read();
 
             v.value =  ( o1 | (o2<<8) | (o3<<16) | (o4<<24) );
+        };
+
+
+        // out -- int32_le
+        template <class WriteStream, class T>
+        void serialize_out(as_t<tag::int32_le, T>&& v, WriteStream& write_stream){
+            static_assert (impl::require_integral<T>());
+            static_assert (std::numeric_limits<T>::is_signed);
+            static_assert (gie::bits_count<T>()>=32);
+
+            using u_t = typename uint_from_int<T>::type;
+            static_assert( impl::require_integral<u_t>() );
+
+            serialize_out(as<tag::uint32_le>(static_cast<u_t>(v.value) ), write_stream);
+
+        }
+
+        // in -- int32_le
+        template <class ReadStream, class T>
+        void serialize_in(as_t<tag::int32_le, T>&& v, ReadStream& read_stream){
+            static_assert (impl::require_integral<T>());
+            static_assert (std::numeric_limits<T>::is_signed);
+            static_assert (gie::bits_count<T>()>=32);
+
+            using u_t = typename uint_from_int<T>::type;
+            static_assert( impl::require_integral<u_t>() );
+
+            u_t const o1 = read_stream.read();
+            u_t const o2 = read_stream.read();
+            u_t const o3 = read_stream.read();
+            u_t const o4 = read_stream.read();
+
+            if(o4 & 0b10000000) { //signed
+               v.value = impl::pad_high_bits_with_one<32> ( o1 | (o2<<8) | (o3<<16) | (o4<<24) ) ;
+            } else {
+               v.value = ( o1 | (o2<<8) | (o3<<16) | (o4<<24) );
+            }
+
         };
 
 

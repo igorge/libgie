@@ -48,6 +48,7 @@ set(TESTS_SOURCES
     "tests/ut_next_power_of_two.cpp"
     "tests/sio2_test.cpp"
     "tests/sio2_test02.cpp"
+    "tests/ut_sio2_test03.cpp"
     "tests/ut_simple_caching_allocator.cpp"
     "tests/ut_simple_lru.cpp"
     "tests/ut_caching_istream_iterator.cpp")
