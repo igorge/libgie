@@ -341,6 +341,28 @@ namespace gie { namespace sio2 {
         };
 
 
+
+        namespace impl {
+
+            template <unsigned int B1, unsigned int B2, unsigned int B3, unsigned int B4>
+            struct byte_order32{
+                using b1 = std::integral_constant<unsigned int, B1>;
+                using b2 = std::integral_constant<unsigned int, B2>;
+                using b3 = std::integral_constant<unsigned int, B3>;
+                using b4 = std::integral_constant<unsigned int, B4>;
+            };
+
+            #if defined(GIE_FLOAT_BYTE_ORDER__LITTLE)
+                using float32_le_byte_mapper = byte_order32<0,1,2,3>;
+            #elif defined(GIE_FLOAT_BYTE_ORDER__BIG)
+                using float32_le_byte_mapper = byte_order32<3,2,1,0>;
+            #else
+                #error Unknown byte order
+            #endif
+
+        }
+
+
         // out -- float32_le
         template <class WriteStream, class T>
         void serialize_out(as_t<tag::float32_le, T>&& v, WriteStream& write_stream){
@@ -349,20 +371,10 @@ namespace gie { namespace sio2 {
 
             auto const bytes = reinterpret_cast<unsigned char const*>(&v.value);
 
-#if defined(GIE_FLOAT_BYTE_ORDER__LITTLE)
-            write_stream.write( bytes[0] );
-            write_stream.write( bytes[1] );
-            write_stream.write( bytes[2] );
-            write_stream.write( bytes[3] );
-
-#elif defined(GIE_FLOAT_BYTE_ORDER__BIG)
-            write_stream.write( bytes[3] );
-            write_stream.write( bytes[2] );
-            write_stream.write( bytes[1] );
-            write_stream.write( bytes[0] );
-#else
-            static_assert(false);
-#endif
+            write_stream.write( bytes[ impl::float32_le_byte_mapper::b1::value ] );
+            write_stream.write( bytes[ impl::float32_le_byte_mapper::b2::value ] );
+            write_stream.write( bytes[ impl::float32_le_byte_mapper::b3::value ] );
+            write_stream.write( bytes[ impl::float32_le_byte_mapper::b4::value ] );
         }
 
 
@@ -374,20 +386,10 @@ namespace gie { namespace sio2 {
 
             auto const bytes = reinterpret_cast<unsigned char *>(&v.value);
 
-
-#if defined(GIE_FLOAT_BYTE_ORDER__LITTLE)
-            bytes[0] = stream.read();
-            bytes[1] = stream.read();
-            bytes[2] = stream.read();
-            bytes[3] = stream.read();
-#elif defined(GIE_FLOAT_BYTE_ORDER__BIG)
-            bytes[3] = stream.read();
-            bytes[2] = stream.read();
-            bytes[1] = stream.read();
-            bytes[0] = stream.read();
-#else
-            static_assert(false);
-#endif
+            bytes[ impl::float32_le_byte_mapper::b1::value ] = stream.read();
+            bytes[ impl::float32_le_byte_mapper::b2::value ] = stream.read();
+            bytes[ impl::float32_le_byte_mapper::b3::value ] = stream.read();
+            bytes[ impl::float32_le_byte_mapper::b4::value ] = stream.read();
 
         }
 
