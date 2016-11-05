@@ -8,6 +8,7 @@
 //================================================================================================================================================
 #pragma once
 //================================================================================================================================================
+#include "gie/config.hpp"
 #include "gie/type_util.hpp"
 
 #include <type_traits>
@@ -33,6 +34,8 @@ namespace gie { namespace sio2 {
             struct uint16_le : integral_type {};
             struct int32_le : integral_type {};
             struct uint32_le : integral_type {};
+
+            struct float32_le : integral_type {};
 
         }
 
@@ -338,7 +341,59 @@ namespace gie { namespace sio2 {
         };
 
 
-    }}
+        // out -- float32_le
+        template <class WriteStream, class T>
+        void serialize_out(as_t<tag::float32_le, T>&& v, WriteStream& write_stream){
+            static_assert (std::numeric_limits<T>::is_iec559);
+            static_assert (sizeof(T)==4 );
+
+            auto const bytes = reinterpret_cast<unsigned char const*>(&v.value);
+
+#if defined(GIE_FLOAT_BYTE_ORDER__LITTLE)
+            write_stream.write( bytes[0] );
+            write_stream.write( bytes[1] );
+            write_stream.write( bytes[2] );
+            write_stream.write( bytes[3] );
+
+#elif defined(GIE_FLOAT_BYTE_ORDER__BIG)
+            write_stream.write( bytes[3] );
+            write_stream.write( bytes[2] );
+            write_stream.write( bytes[1] );
+            write_stream.write( bytes[0] );
+#else
+            static_assert(false);
+#endif
+        }
+
+
+        // in -- float32_le
+        template <class WriteStream, class T>
+        void serialize_in(as_t<tag::float32_le, T>&& v, WriteStream& stream) {
+            static_assert(std::numeric_limits<T>::is_iec559);
+            static_assert(sizeof(T) == 4);
+
+            auto const bytes = reinterpret_cast<unsigned char *>(&v.value);
+
+
+#if defined(GIE_FLOAT_BYTE_ORDER__LITTLE)
+            bytes[0] = stream.read();
+            bytes[1] = stream.read();
+            bytes[2] = stream.read();
+            bytes[3] = stream.read();
+#elif defined(GIE_FLOAT_BYTE_ORDER__BIG)
+            bytes[3] = stream.read();
+            bytes[2] = stream.read();
+            bytes[1] = stream.read();
+            bytes[0] = stream.read();
+#else
+            static_assert(false);
+#endif
+
+        }
+
+
+
+}}
 //================================================================================================================================================
 #endif
 //================================================================================================================================================
