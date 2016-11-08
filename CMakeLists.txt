@@ -52,7 +52,8 @@ set(TESTS_SOURCES
     "tests/ut_sio2_test04.cpp"
     "tests/ut_simple_caching_allocator.cpp"
     "tests/ut_simple_lru.cpp"
-    "tests/ut_caching_istream_iterator.cpp")
+    "tests/ut_caching_istream_iterator.cpp"
+    "tests/ut_sbdec01.cpp")
     
 find_package (Boost COMPONENTS unit_test_framework system date_time REQUIRED)
     
