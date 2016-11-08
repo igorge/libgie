@@ -28,21 +28,43 @@ namespace gie { namespace sio2 {
 
             struct not_specified : type_tag {};
 
+            struct float_type  : type_tag {};
             struct integral_type : type_tag {};
-            struct octet : integral_type {};
-            struct int16_le : integral_type {};
-            struct uint16_le : integral_type {};
-            struct int32_le : integral_type {};
-            struct uint32_le : integral_type {};
 
-            struct float32_le : integral_type {};
+            struct octet : integral_type {
+                using base_type = std::uint_fast8_t;
+            };
+
+            struct int16_le : integral_type {
+                using base_type = std::int_fast16_t;
+            };
+
+            struct uint16_le : integral_type {
+                using base_type = std::int_fast16_t;
+            };
+
+
+            struct int32_le : integral_type {
+                using base_type = std::int_fast32_t;
+            };
+            struct uint32_le : integral_type {
+                using base_type = std::uint_fast32_t;
+            };
+
+            struct float32_le : float_type {
+                using base_type = float;
+            };
 
         }
 
+        struct type_wrapper {};
+
         template <class TTag, class T>
-        struct as_t {
+        struct as_t : type_wrapper {
             typedef TTag target_type_tag;
             typedef T source_type;
+
+            as_t(T& v) : value(v) {}
 
             T& value;
         };
@@ -60,9 +82,11 @@ namespace gie { namespace sio2 {
         }
 
         template <class TTag, class T>
-        struct as_array_of_t {
+        struct as_array_of_t : type_wrapper {
             typedef TTag target_type_tag;
             typedef T source_type;
+
+            as_array_of_t(T& v) : value(v) {}
 
             T& value;
         };
