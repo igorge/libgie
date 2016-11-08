@@ -69,10 +69,10 @@ namespace gie {
 
                 auto const& r = m_lru.find(idx);
                 if(r) {
-                    GIE_DEBUG_LOG("GET PAGE HIT : "<< idx);
+                    //GIE_DEBUG_LOG("GET PAGE HIT : "<< idx);
                     return *r;
                 } else {
-                    GIE_DEBUG_LOG("GET PAGE MISS : "<< idx);
+                    //GIE_DEBUG_LOG("GET PAGE MISS : "<< idx);
                     return read_page_(idx);
                 }
 

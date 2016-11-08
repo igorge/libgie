@@ -79,7 +79,7 @@ namespace gie {
             auto const& r = index0.find(key);
 
             if(r==index0.end()){
-                GIE_DEBUG_LOG("index for key '"<<key<<"' not found, inserting...");
+                //GIE_DEBUG_LOG("index for key '"<<key<<"' not found, inserting...");
                 if(index0.size()==m_max_count){
                     shrink_();
                 }
@@ -89,7 +89,7 @@ namespace gie {
 
                 return r2.first->value;
             } else {
-                GIE_DEBUG_LOG("index for key '"<<key<<"' found, replacing...");
+                //GIE_DEBUG_LOG("index for key '"<<key<<"' found, replacing...");
                 GIE_CHECK( index0.modify(r, [&value](value_type& v){v.value=std::forward<P2>(value);}) );
 
                 update_used_(r);
@@ -124,7 +124,7 @@ namespace gie {
     private:
         template <class Iter>
         void update_used_(Iter& iter){
-            GIE_DEBUG_LOG("update used for '"<< iter->key << "'.");
+            //GIE_DEBUG_LOG("update used for '"<< iter->key << "'.");
 
             auto& index1 = m_container.template get<1>();
             auto const& i1_iter = m_container.template project<1>(iter);
@@ -137,7 +137,7 @@ namespace gie {
             assert(!m_container.empty());
             auto& index1 = m_container.template get<1>();
 
-            GIE_DEBUG_LOG("evicting oldest entry with key '"<<index1.begin()->key<<"' ...");
+            //GIE_DEBUG_LOG("evicting oldest entry with key '"<<index1.begin()->key<<"' ...");
 
             index1.erase(index1.begin());
             assert(m_container.size()==m_max_count-1);
