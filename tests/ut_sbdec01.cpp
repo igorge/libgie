@@ -6,6 +6,8 @@
 #include "gie/sbdec/sbdec.hpp"
 #include "gie/sio2/sio2_range_reader.hpp"
 
+#include <boost/fusion/tuple.hpp>
+#include <boost/fusion/adapted/std_tuple.hpp>
 #include <boost/test/unit_test.hpp>
 //================================================================================================================================================
 BOOST_AUTO_TEST_SUITE( sbdec01 )
@@ -135,6 +137,66 @@ BOOST_AUTO_TEST_CASE( test_01 ) {
 
 
     }
+
+
+    BOOST_AUTO_TEST_CASE( test_05 ) {
+
+        using boost::fusion::get;
+
+        GIE_DEBUG_LOG("---MARK---");
+
+        typedef std::vector<unsigned char> container_t;
+        container_t container = {1,2,3};
+
+        {
+            sio2::range_reader_t<container_t> reader{container};
+
+            auto const p = sbdec::value<sio2::tag::octet>() >> sbdec::value<sio2::tag::octet>() >> sbdec::value<sio2::tag::octet>();
+
+
+            auto r = p(reader, nullptr);
+
+//            boost::fusion::vector<unsigned char, unsigned char, unsigned char> vv = r;
+
+//            BOOST_TEST( get<0>(vv) == 1 );
+//            BOOST_TEST( get<1>(vv) == 2 );
+//            BOOST_TEST( get<2>(vv) == 3 );
+
+        }
+
+
+
+    }
+
+
+    BOOST_AUTO_TEST_CASE( test_06 ) {
+
+        using boost::fusion::get;
+
+        GIE_DEBUG_LOG("---MARK---");
+
+        typedef std::vector<unsigned char> container_t;
+        container_t container = {1,2,3};
+
+        {
+            sio2::range_reader_t<container_t> reader{container};
+
+            auto const p = sbdec::value<sio2::tag::octet>() >> (sbdec::value<sio2::tag::octet>() >> sbdec::value<sio2::tag::octet>()).as<std::tuple<unsigned, unsigned>>();
+
+
+            auto r = p(reader, nullptr);
+
+            //int * v = r;
+
+            //std::tuple<unsigned char, unsigned char, unsigned char> vv {r};
+
+
+        }
+
+
+
+    }
+
 
 //================================================================================================================================================
 BOOST_AUTO_TEST_SUITE_END()
