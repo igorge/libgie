@@ -13,7 +13,12 @@
 
 #include <boost/fusion/include/vector.hpp>
 #include <boost/fusion/include/filter_view.hpp>
+#include <boost/fusion/include/front.hpp>
+#include <boost/fusion/include/size.hpp>
+#include <boost/fusion/include/move.hpp>
+#include <boost/fusion/include/copy.hpp>
 #include <boost/type_traits/is_convertible.hpp>
+#include <boost/mpl/int.hpp>
 //================================================================================================================================================
 namespace gie { namespace sbdec {
 
@@ -33,7 +38,7 @@ namespace gie { namespace sbdec {
 
             while(current) {
                 if(current->name!= nullptr) {
-                    tmp += "/";
+                    tmp += "@";
                     tmp += *(current->name);
                 }
 
@@ -77,6 +82,10 @@ namespace gie { namespace sbdec {
             }
 
             Parser m_parser;
+
+            auto name(std::string&& name){
+                return with_name( std::move(name), *this );
+            }
         };
 
         template <class Parser>
@@ -85,25 +94,58 @@ namespace gie { namespace sbdec {
         }
 
 
+        namespace impl {
+
+            template <class Seq>
+            using seq_size = typename boost::fusion::result_of::size< typename std::remove_reference<Seq>::type >::type;
+
+            template <class Seq>
+            auto transform_seq(Seq&& seq, std::enable_if_t<seq_size<Seq>::value==0> * dummy = nullptr)
+            {
+                return ignore_t{} ;
+            };
+
+            template <class Seq>
+            auto transform_seq(Seq&& seq, std::enable_if_t< (seq_size<Seq>::value>1) > * dummy = nullptr)
+            {
+                using vec_t = typename  boost::fusion::result_of::as_vector<Seq>::type;
+
+//                vec_t tmp_vec;
+//                boost::fusion::move( std::forward<Seq>(seq), tmp_vec );
+//
+//                return tmp_vec;
+
+                return vec_t( std::move(seq) );
+            };
+
+            template <class Seq>
+            auto transform_seq(Seq&& seq, std::enable_if_t< seq_size<Seq>::value==1 > * dummy = nullptr)
+            {
+                return std::move(boost::fusion::front(std::forward<Seq>(seq) ));
+            };
+
+
+        }
+
         template <class P1, class P2>
         auto operator >> (parser_t<P1> && p1, P2&&p2){
-            return parser([p1 = std::move(p1), p2 = std::forward<decltype(p2)>(p2)] (auto& reader, context_scope const *const scope){
+            return parser([p1 = std::move(p1), p2 = std::move(p2)] (auto& reader, context_scope const *const scope){
 
-                auto const v1 = p1(reader, scope);
-                auto const v2 = p2(reader, scope);
+                auto v1 = p1(reader, scope);
+                auto v2 = p2(reader, scope);
 
-                auto const r =  boost::fusion::vector<decltype(v1), decltype(v2)>(v1, v2);
+                auto r =  boost::fusion::vector<decltype(v1), decltype(v2)>(std::move(v1), std::move(v2));
 
-                boost::fusion::filter_view<decltype(r), boost::mpl::not_< boost::is_convertible<boost::mpl::_1, ignore_t> > > view{ r };
+                boost::fusion::filter_view<decltype(r), boost::mpl::not_< boost::is_convertible<boost::mpl::_1, ignore_t> > > view1{ r };
 
-                return boost::fusion::as_vector( view );
+                return impl::transform_seq( std::move(view1) );
             });
         };
 
 
         template <class Parser>
-        auto with_scope(std::string const& scope_name, Parser&& p){
-            return parser([name=scope_name, p=std::forward<decltype(p)>(p)](auto& reader, context_scope const *const scope){
+        auto with_name(std::string && scope_name, Parser&& p){
+            return parser([name=std::move(scope_name), p=std::forward<decltype(p)>(p)](auto& reader, context_scope const *const scope){
                 context_scope current_scope = {scope, &name};
                 return p(reader, &current_scope);
             });
@@ -121,6 +163,17 @@ namespace gie { namespace sbdec {
             };
         }
 
+
+        template <class TypeTag>
+        auto value(){
+            return [](auto& reader, context_scope const*const scope){
+
+                typename TypeTag::base_type tmp;
+                reader( sio2::as<TypeTag>(tmp) );
+
+                return tmp;
+            };
+        }
 
 
 
