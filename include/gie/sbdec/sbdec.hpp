@@ -17,6 +17,7 @@
 #include <boost/fusion/include/size.hpp>
 #include <boost/fusion/include/move.hpp>
 #include <boost/fusion/include/copy.hpp>
+#include <boost/fusion/functional/invocation/invoke.hpp>
 #include <boost/type_traits/is_convertible.hpp>
 #include <boost/mpl/int.hpp>
 //================================================================================================================================================
@@ -110,12 +111,7 @@ namespace gie { namespace sbdec {
             {
                 using vec_t = typename  boost::fusion::result_of::as_vector<Seq>::type;
 
-//                vec_t tmp_vec;
-//                boost::fusion::move( std::forward<Seq>(seq), tmp_vec );
-//
-//                return tmp_vec;
-
-                return vec_t( std::move(seq) );
+                return boost::fusion::invoke( [](auto&& ... args){ return vec_t{ std::move(args)...}; },  seq);
             };
 
             template <class Seq>

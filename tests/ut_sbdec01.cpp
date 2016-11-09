@@ -15,9 +15,11 @@ using namespace gie;
 
     struct dummy_t {
 
-        dummy_t(){
-            GIE_DEBUG_LOG("ctor()");
+        explicit dummy_t(int){
+            GIE_DEBUG_LOG("ctor int");
         }
+
+        dummy_t() = delete;
 
         dummy_t(dummy_t&&){
             GIE_DEBUG_LOG("move ctor");
@@ -47,7 +49,7 @@ BOOST_AUTO_TEST_CASE( test_01 ) {
             sio2::range_reader_t<container_t> reader{container};
 
             auto p = (sbdec::with_name("constant", sbdec::constant<sio2::tag::octet>(1)) >> sbdec::constant<sio2::tag::octet>(2)).name("parser") >>
-                        sbdec::value<sio2::tag::octet>()  >> [](auto&&, auto&&){ return dummy_t{} ;};
+                        sbdec::value<sio2::tag::octet>()  >> [](auto&&, auto&&){ return dummy_t{23} ;};
 
 
 
