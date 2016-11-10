@@ -20,6 +20,8 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=float-cast-overflow")
 
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-sanitize-recover")
+else()
+#    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -finline-functions -findirect-inlining")
 endif ()
 
 

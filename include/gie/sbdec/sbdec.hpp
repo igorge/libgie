@@ -14,6 +14,7 @@
 
 #include <boost/hana/type.hpp>
 #include <boost/hana/tuple.hpp>
+#include <boost/hana/size.hpp>
 #include <boost/hana/flatten.hpp>
 #include <boost/hana/concat.hpp>
 #include <boost/hana/core/is_a.hpp>
@@ -24,6 +25,8 @@
 #include <boost/type_traits/is_convertible.hpp>
 //================================================================================================================================================
 namespace gie { namespace sbdec {
+
+        using namespace boost::hana::literals;
 
         namespace sio2 = ::gie::sio2;
         namespace hana = ::boost::hana;
@@ -90,8 +93,8 @@ namespace gie { namespace sbdec {
             auto operator()(ReaderT& reader, context_scope const *const scope)const{
 
                 return hana::eval_if( hana::is_a<hana::tuple_tag, decltype(m_parser( reader, scope ))>,
-                               [&]{return m_parser( reader, scope );},
-                               [&]{return hana::make_tuple(m_parser( reader, scope ) );}
+                               [&](auto _){return m_parser( reader, scope );},
+                               [&](auto _){return hana::make_tuple(m_parser( reader, scope ) );}
                 );
             }
 
@@ -152,6 +155,19 @@ namespace gie { namespace sbdec {
                 });
             };
 
+
+            template <class T>
+            decltype(auto) unlift(T&& v, std::enable_if_t< ! hana::is_a<hana::tuple_tag, T>() > * const dummy = nullptr){
+                return std::forward<T>(v);
+            }
+
+            template <class T>
+            decltype(auto) unlift(T&&v, std::enable_if_t< (hana::is_a<hana::tuple_tag, T>() && decltype(hana::size(v))::value == 1) > * const dummy = nullptr){
+                static_assert( std::is_reference<decltype(v[0_c])>::value );
+                static_assert( std::is_lvalue_reference<decltype(v[0_c])>::value );
+                return v[0_c];
+            }
+
         }
 
 
@@ -209,13 +225,13 @@ namespace gie { namespace sbdec {
             return parser([inner=std::move(inner)](auto& reader, context_scope const*const scope){
 
                 using counter_t = std::size_t;
-                using elem_t = decltype( inner(reader, scope) );
+                using elem_t = std::remove_reference_t<decltype( impl::unlift( inner( reader, scope ) ) )>;
 
                 std::vector<elem_t> data;
                 data.reserve(counter);
 
                 for(counter_t i = 0; i<counter; ++i){
-                    data.emplace_back( inner( reader, scope ) );
+                    data.emplace_back( std::move(impl::unlift( inner( reader, scope ) ) ) );
                 }
 
                 return data;
@@ -229,7 +245,7 @@ namespace gie { namespace sbdec {
             return parser([inner=std::move(inner)](auto& reader, context_scope const*const scope){
 
                 using counter_t = typename CounterTypeTag::base_type;
-                using elem_t = decltype( inner(reader, scope) );
+                using elem_t = std::remove_reference_t<decltype( impl::unlift( inner( reader, scope ) ) )>;
 
                 counter_t counter;
                 GIE_FILTER_SIO2_EXCEPTIONS([&]() {
@@ -240,7 +256,7 @@ namespace gie { namespace sbdec {
                 data.reserve(counter);
 
                 for(counter_t i = 0; i<counter; ++i){
-                    data.emplace_back( inner( reader, scope ) );
+                    data.emplace_back( std::move(impl::unlift( inner( reader, scope ) ) ) );
                 }
 
                 return data;

@@ -46,6 +46,11 @@ BOOST_AUTO_TEST_SUITE( sbdec01 )
 
     };
 
+    auto const dummy_p = [](auto value){
+        return sbdec::parser( [value](auto&&, auto&&){ return dummy_t{value};} );
+    };
+
+
     BOOST_AUTO_TEST_CASE( test_01 ) {
 
         GIE_DEBUG_LOG("---MARK---");
@@ -184,10 +189,6 @@ BOOST_AUTO_TEST_SUITE( sbdec01 )
         {
             sio2::range_reader_t<container_t> reader{container};
 
-            auto dummy_p = [](auto value){
-                return sbdec::parser( [value](auto&&, auto&&){ return dummy_t{value};} );
-            };
-
             auto const parser = dummy_p(9)
                     >> (dummy_p(7) >> dummy_p(10)).as<std::tuple>() >> dummy_p(22);
 
@@ -202,135 +203,80 @@ BOOST_AUTO_TEST_SUITE( sbdec01 )
 
 
 
-//    BOOST_AUTO_TEST_CASE( test_02 ) {
-//
-//        typedef std::vector<unsigned char> container_t;
-//        container_t container = {3, 2, 5, 9};
-//
-//        {
-//            sio2::range_reader_t<container_t> reader{container};
-//
-//            auto const p = sbdec::repeat<sio2::tag::octet>( sbdec::value<sio2::tag::octet>() );
-//
-//
-//            auto r = p(reader, nullptr);
-//
-//            BOOST_TEST(r.size() = 3);
-//            BOOST_TEST(r.at(0) = 2);
-//            BOOST_TEST(r.at(1) = 5);
-//            BOOST_TEST(r.at(2) = 9);
-//
-//        }
-//
-//
-//
-//    }
-//
-//    BOOST_AUTO_TEST_CASE( test_03 ) {
-//
-//        GIE_DEBUG_LOG("---MARK---");
-//
-//        typedef std::vector<unsigned char> container_t;
-//        container_t container = {3};
-//
-//        {
-//            sio2::range_reader_t<container_t> reader{container};
-//
-//            auto const p = sbdec::repeat<sio2::tag::octet>( [](auto&&, auto&&){ return dummy_t{23} ;} );
-//
-//
-//            auto r = p(reader, nullptr);
-//
-//            static_assert( std::is_same<decltype(r)::value_type, dummy_t>::value);
-//            BOOST_TEST(r.size() = 3);
-//        }
-//
-//
-//
-//    }
-//
-//    BOOST_AUTO_TEST_CASE( test_04 ) {
-//
-//        GIE_DEBUG_LOG("---MARK---");
-//
-//        typedef std::vector<unsigned char> container_t;
-//        container_t container = {};
-//
-//        {
-//            sio2::range_reader_t<container_t> reader{container};
-//
-//            auto const p = sbdec::repeat_n<4>( [](auto&&, auto&&){ return dummy_t{23} ;} );
-//
-//
-//            auto r = p(reader, nullptr);
-//
-//            static_assert( std::is_same<decltype(r)::value_type, dummy_t>::value);
-//            BOOST_TEST(r.size() = 4);
-//        }
-//
-//
-//
-//    }
-//
-//
-//    BOOST_AUTO_TEST_CASE( test_05 ) {
-//
-//        using boost::fusion::get;
-//
-//        GIE_DEBUG_LOG("---MARK---");
-//
-//        typedef std::vector<unsigned char> container_t;
-//        container_t container = {1,2,3};
-//
-//        {
-//            sio2::range_reader_t<container_t> reader{container};
-//
-//            auto const p = sbdec::value<sio2::tag::octet>() >> sbdec::value<sio2::tag::octet>() >> sbdec::value<sio2::tag::octet>();
-//
-//
-//            auto r = p(reader, nullptr);
-//
-////            boost::fusion::vector<unsigned char, unsigned char, unsigned char> vv = r;
-//
-////            BOOST_TEST( get<0>(vv) == 1 );
-////            BOOST_TEST( get<1>(vv) == 2 );
-////            BOOST_TEST( get<2>(vv) == 3 );
-//
-//        }
-//
-//
-//
-//    }
-//
-//
-//    BOOST_AUTO_TEST_CASE( test_06 ) {
-//
-//        using boost::fusion::get;
-//
-//        GIE_DEBUG_LOG("---MARK---");
-//
-//        typedef std::vector<unsigned char> container_t;
-//        container_t container = {1,2,3};
-//
-//        {
-//            sio2::range_reader_t<container_t> reader{container};
-//
-//            auto const p = sbdec::value<sio2::tag::octet>() >> (sbdec::value<sio2::tag::octet>() >> sbdec::value<sio2::tag::octet>()).as<std::tuple<unsigned, unsigned>>();
-//
-//
-//            auto r = p(reader, nullptr);
-//
-//            //int * v = r;
-//
-//            //std::tuple<unsigned char, unsigned char, unsigned char> vv {r};
-//
-//
-//        }
-//
-//
-//
-//    }
+    BOOST_AUTO_TEST_CASE( test_repeat_01 ) {
 
+        GIE_DEBUG_LOG("---MARK---");
+
+        typedef std::vector<unsigned char> container_t;
+        container_t container = {3, 2, 5, 9};
+
+        {
+            sio2::range_reader_t<container_t> reader{container};
+
+            auto const p = sbdec::repeat<sio2::tag::octet>( sbdec::value<sio2::tag::octet>() );
+
+
+            auto rt = p(reader, nullptr);
+
+            auto& r = rt[0_c];
+
+            BOOST_TEST(r.size() = 3);
+            BOOST_TEST(r.at(0) = 2);
+            BOOST_TEST(r.at(1) = 5);
+            BOOST_TEST(r.at(2) = 9);
+
+        }
+
+
+
+    }
+
+    BOOST_AUTO_TEST_CASE( test_repeat_01_02 ) {
+
+        GIE_DEBUG_LOG("---MARK---");
+
+        typedef std::vector<unsigned char> container_t;
+        container_t container = {3};
+
+        {
+            sio2::range_reader_t<container_t> reader{container};
+
+            auto const p = sbdec::repeat<sio2::tag::octet>( dummy_p(23) );
+
+            auto rt = p(reader, nullptr);
+            auto& r = rt[0_c];
+
+            static_assert( std::is_same<std::remove_reference<decltype(r)>::type::value_type, dummy_t>::value);
+            BOOST_TEST(r.size() = 3);
+        }
+
+
+
+    }
+
+    BOOST_AUTO_TEST_CASE( test_repeat_01_03 ) {
+
+        GIE_DEBUG_LOG("---MARK---");
+
+        typedef std::vector<unsigned char> container_t;
+        container_t container = {};
+
+        {
+            sio2::range_reader_t<container_t> reader{container};
+
+            auto const p = sbdec::repeat_n<4>( dummy_p(21) );
+
+            auto rt = p(reader, nullptr);
+            auto& r = rt[0_c];
+
+            static_assert( std::is_same<std::remove_reference<decltype(r)>::type::value_type, dummy_t>::value);
+            BOOST_TEST(r.size() = 4);
+            BOOST_TEST(r.at(0).value==21);
+        }
+
+
+
+    }
 
 //================================================================================================================================================
 BOOST_AUTO_TEST_SUITE_END()
