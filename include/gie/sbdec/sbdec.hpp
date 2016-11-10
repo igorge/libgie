@@ -12,31 +12,21 @@
 #include "gie/sio2/sio2_core.hpp"
 #include "gie/sio2/sio2_exceptions.hpp"
 
-#include <boost/fusion/include/is_sequence.hpp>
-#include <boost/fusion/include/single_view.hpp>
-#include <boost/fusion/include/vector.hpp>
-#include <boost/fusion/include/push_back.hpp>
-#include <boost/fusion/include/filter_view.hpp>
-#include <boost/fusion/include/flatten_view.hpp>
-#include <boost/fusion/include/joint_view.hpp>
-#include <boost/fusion/include/join.hpp>
-#include <boost/fusion/include/filter.hpp>
-#include <boost/fusion/include/front.hpp>
-#include <boost/fusion/include/size.hpp>
-#include <boost/fusion/include/move.hpp>
-#include <boost/fusion/include/copy.hpp>
-#include <boost/fusion/include/void.hpp>
-#include <boost/fusion/functional/invocation/invoke.hpp>
+#include <boost/hana/type.hpp>
+#include <boost/hana/tuple.hpp>
+#include <boost/hana/flatten.hpp>
+#include <boost/hana/concat.hpp>
+#include <boost/hana/core/is_a.hpp>
+#include <boost/hana/eval_if.hpp>
+#include <boost/hana/unpack.hpp>
+
+
 #include <boost/type_traits/is_convertible.hpp>
-#include <boost/mpl/int.hpp>
 //================================================================================================================================================
 namespace gie { namespace sbdec {
 
         namespace sio2 = ::gie::sio2;
-
-        using boost::fusion::void_;
-
-
+        namespace hana = ::boost::hana;
 
         struct context_scope {
             context_scope const* previous;
@@ -69,6 +59,24 @@ namespace gie { namespace sbdec {
 
         }
 
+        namespace impl {
+
+            template <class Fun>
+            auto filter_sio2_exceptions(Fun&& fun, context_scope const * const scope, char const*const file, int const line){
+
+                try{
+                    return fun();
+                } catch (sio2::exception::underflow const&){
+                    std::string name{"<<UNEXPECTED EOF>>"};
+                    context_scope tmp = {scope, &name};
+                    GIE_THROW_EX( exception::match_error() << gie::exception::error_str_einfo( make_scope(&tmp) ), "<<unspecified>>", file, line );
+                }
+
+            }
+
+
+        }
+
         struct parser_tag {};
 
 
@@ -80,7 +88,11 @@ namespace gie { namespace sbdec {
 
             template <class ReaderT>
             auto operator()(ReaderT& reader, context_scope const *const scope)const{
-                return m_parser( reader, scope );
+
+                return hana::eval_if( hana::is_a<hana::tuple_tag, decltype(m_parser( reader, scope ))>,
+                               [&]{return m_parser( reader, scope );},
+                               [&]{return hana::make_tuple(m_parser( reader, scope ) );}
+                );
             }
 
             Parser m_parser;
@@ -89,11 +101,22 @@ namespace gie { namespace sbdec {
                 return with_name( std::move(name), *this );
             }
 
-            template <class T>
+            template <template <class ...> class T>
             auto as(){
-                return parser([parser= std::move(*this)](auto& reader, context_scope const *const scope)->T{
-                    auto v = parser(reader, scope);
-                    return boost::fusion::invoke( [](auto&& ... args){ return T{ std::move(args)...}; },  v);
+                return parser([parser= std::move(*this)](auto& reader, context_scope const *const scope){
+
+                    static_assert( hana::is_a<hana::tuple_tag, decltype(parser(reader, scope))> );
+
+                    return hana::unpack( parser(reader, scope),
+                                         [](auto&& ...args){
+
+                                             using as_t = T< std::remove_reference_t<decltype(args)> ... >;
+
+                                             return as_t{ std::forward<decltype(args)>(args) ... };
+                                         }
+                    );
+
+
                 });
             }
         };
@@ -111,86 +134,21 @@ namespace gie { namespace sbdec {
         #define GIE_FILTER_SIO2_EXCEPTIONS_EX(fun, scope) impl::filter_sio2_exceptions(fun, scope, __FILE__, __LINE__)
         #define GIE_FILTER_SIO2_EXCEPTIONS(fun) GIE_FILTER_SIO2_EXCEPTIONS_EX(fun, scope)
 
-        namespace impl {
-
-
-            template <class Fun>
-            auto filter_sio2_exceptions(Fun&& fun, context_scope const * const scope, char const*const file, int const line){
-
-                try{
-                    return fun();
-                } catch (sio2::exception::underflow const&){
-                    std::string name{"<<UNEXPECTED EOF>>"};
-                    context_scope tmp = {scope, &name};
-                    GIE_THROW_EX( exception::match_error() << gie::exception::error_str_einfo( make_scope(&tmp) ), "<<unspecified>>", file, line );
-                }
-
-            }
-
-            template <class Seq>
-            using seq_size = typename boost::fusion::result_of::size< typename std::remove_reference<Seq>::type >::type;
-
-            template <class Seq>
-            auto transform_seq(Seq&& seq, std::enable_if_t<seq_size<Seq>::value==0> * dummy = nullptr)
-            {
-                return void_{} ;
-            };
-
-            template <class Seq>
-            auto transform_seq(Seq&& seq, std::enable_if_t< (seq_size<Seq>::value>1) > * dummy = nullptr)
-            {
-//                using SeqFlat = boost::fusion::flatten_view<Seq>;
-//                SeqFlat seq_flat(seq);
-
-//                using vec_t = typename  boost::fusion::result_of::as_vector<SeqFlat>::type;
-                using vec_t = typename  boost::fusion::result_of::as_vector< std::remove_reference_t<Seq> >::type;
-
-                return boost::fusion::invoke( [](auto&& ... args){ return vec_t{ std::move(args)...}; },  seq);
-            };
-
-            template <class Seq>
-            auto transform_seq(Seq&& seq, std::enable_if_t< seq_size<Seq>::value==1 > * dummy = nullptr)
-            {
-                return std::move(boost::fusion::front(std::forward<Seq>(seq) ));
-            };
-
-
-        }
-
 
         namespace impl{
-
-            template <class T>
-            auto& wrap_single(T& seq, std::enable_if_t< boost::fusion::traits::is_sequence <T>::value> * dummy = nullptr){
-                return seq;
-            }
-
-            template <class T>
-            auto wrap_single(T& value, std::enable_if_t< ! boost::fusion::traits::is_sequence <T>::value> * dummy = nullptr){
-                static_assert( ! std::is_reference<T>::value );
-                static_assert( ! std::is_const<T>::value );
-                return boost::fusion::vector<T>{ std::move(value) };
-            }
 
             template <class P1, class P2>
             auto make_sequence(P1&&p1, P2&&p2){
                 return parser([p1 = std::forward<P1>(p1), p2 = std::forward<P2>(p2)] (auto& reader, context_scope const *const scope){
 
+
+                    static_assert( ! std::is_reference<decltype(p1(reader, scope))>::value );
+                    static_assert( ! std::is_reference<decltype(p2(reader, scope))>::value );
+
                     auto v1 = p1(reader, scope);
                     auto v2 = p2(reader, scope);
 
-                    //auto r =  boost::fusion::vector<decltype(v1), decltype(v2)>(std::move(v1), std::move(v2));
-
-                    decltype(auto)  seq1 = wrap_single(v1);
-                    decltype(auto)  seq2 = wrap_single(v2);
-
-                    auto joint_view  = boost::fusion::join(seq1, seq2);
-                    auto filtered_view = boost::fusion::filter<boost::mpl::not_< boost::is_convertible<boost::mpl::_1, void_>>> (joint_view);
-
-
-                    //boost::fusion::filter_view<decltype(r), boost::mpl::not_< boost::is_convertible<boost::mpl::_1, void_> > > view1{ r };
-
-                    return impl::transform_seq( joint_view );
+                    return hana::concat( std::move(v1), std::move(v2) );
                 });
             };
 
@@ -219,7 +177,6 @@ namespace gie { namespace sbdec {
         template <class TypeTag>
         auto constant(typename TypeTag::base_type const value){
             return [value](auto& reader, context_scope const*const scope){
-
                 typename TypeTag::base_type tmp;
 
                 GIE_FILTER_SIO2_EXCEPTIONS([&](){
@@ -228,7 +185,7 @@ namespace gie { namespace sbdec {
 
                 GIE_CHECK_EX( value == tmp, exception::match_error() << gie::exception::error_str_einfo( make_scope(scope) ) );
 
-                return void_{};
+                return hana::make_tuple();
             };
         }
 
