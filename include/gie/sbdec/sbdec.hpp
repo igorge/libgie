@@ -100,12 +100,20 @@ namespace gie { namespace sbdec {
 
             Parser m_parser;
 
-            auto name(std::string&& name){
+            auto name(std::string&& name)const{
                 return with_name( std::move(name), *this );
             }
 
+            auto as_void()const {
+                return parser([parser= std::move(*this)](auto& reader, context_scope const *const scope){
+                    (void)parser(reader, scope);
+                    return hana::make_tuple();
+                });
+
+            }
+
             template <template <class ...> class T>
-            auto as(){
+            auto as()const{
                 return parser([parser= std::move(*this)](auto& reader, context_scope const *const scope){
 
                     static_assert( hana::is_a<hana::tuple_tag, decltype(parser(reader, scope))> );
@@ -121,6 +129,25 @@ namespace gie { namespace sbdec {
 
 
                 });
+            }
+
+
+            template <class Lambda>
+            auto as(Lambda&& lambda)const{
+                return parser([parser=std::move(*this), lambda=std::forward<Lambda>(lambda)](auto& reader, context_scope const *const scope){
+                    static_assert( hana::is_a<hana::tuple_tag, decltype(parser(reader, scope))> );
+
+                    return hana::unpack( parser(reader, scope),
+                                         [lambda](auto&& ...args){
+                                             return lambda(std::forward<decltype(args)>(args) ... );
+                                         }
+                    );
+                });
+            }
+
+
+            auto ref()const{
+                return parser_t<parser_t<Parser> const&>(*this);
             }
         };
 
@@ -162,6 +189,11 @@ namespace gie { namespace sbdec {
             }
 
             template <class T>
+            decltype(auto) unlift(T&&v, std::enable_if_t< (hana::is_a<hana::tuple_tag, T>() && decltype(hana::size(v))::value > 1) > * const dummy = nullptr){
+                return std::forward<T>(v);
+            }
+
+            template <class T>
             decltype(auto) unlift(T&&v, std::enable_if_t< (hana::is_a<hana::tuple_tag, T>() && decltype(hana::size(v))::value == 1) > * const dummy = nullptr){
                 static_assert( std::is_reference<decltype(v[0_c])>::value );
                 static_assert( std::is_lvalue_reference<decltype(v[0_c])>::value );
@@ -192,7 +224,7 @@ namespace gie { namespace sbdec {
 
         template <class TypeTag>
         auto constant(typename TypeTag::base_type const value){
-            return [value](auto& reader, context_scope const*const scope){
+            return parser([value](auto& reader, context_scope const*const scope){
                 typename TypeTag::base_type tmp;
 
                 GIE_FILTER_SIO2_EXCEPTIONS([&](){
@@ -202,7 +234,7 @@ namespace gie { namespace sbdec {
                 GIE_CHECK_EX( value == tmp, exception::match_error() << gie::exception::error_str_einfo( make_scope(scope) ) );
 
                 return hana::make_tuple();
-            };
+            });
         }
 
 
@@ -242,7 +274,7 @@ namespace gie { namespace sbdec {
         template <class CounterTypeTag, class InnerParser>
         auto repeat(InnerParser&& inner){
 
-            return parser([inner=std::move(inner)](auto& reader, context_scope const*const scope){
+            return parser([inner=std::forward<InnerParser>(inner)](auto& reader, context_scope const*const scope){
 
                 using counter_t = typename CounterTypeTag::base_type;
                 using elem_t = std::remove_reference_t<decltype( impl::unlift( inner( reader, scope ) ) )>;

@@ -278,6 +278,34 @@ BOOST_AUTO_TEST_SUITE( sbdec01 )
 
     }
 
+    BOOST_AUTO_TEST_CASE( test_repeat_02 ) {
+
+        GIE_DEBUG_LOG("---MARK---");
+
+        typedef std::vector<unsigned char> container_t;
+        container_t container = {2, 2, 5, 9, 6};
+
+        {
+            sio2::range_reader_t<container_t> reader{container};
+            auto const p = sbdec::repeat<sio2::tag::octet>(  sbdec::value<sio2::tag::octet>() >> sbdec::value<sio2::tag::octet>() );
+
+            auto rt = p(reader, nullptr);
+
+            auto& r = rt[0_c];
+
+            BOOST_TEST(r.size()==2);
+
+            BOOST_TEST(r.at(0)[0_c] == 2);
+            BOOST_TEST(r.at(0)[1_c] == 5);
+
+            BOOST_TEST(r.at(1)[0_c] == 9);
+            BOOST_TEST(r.at(1)[1_c] == 6);
+        }
+
+
+
+    }
+
 //================================================================================================================================================
 BOOST_AUTO_TEST_SUITE_END()
 //================================================================================================================================================
