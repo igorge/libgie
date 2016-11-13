@@ -16,7 +16,7 @@ namespace gie {
     template <class T>
     struct simple_mt_allocator_t{
 
-        friend class boost_test__simple_caching_allocator;
+        friend struct boost_test__simple_caching_allocator;
 
         template <class... Args>
         simple_mt_allocator_t(Args&&... args) : m_allocator_( std::forward<Args>(args)... ) {}

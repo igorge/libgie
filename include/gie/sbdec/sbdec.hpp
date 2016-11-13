@@ -83,6 +83,13 @@ namespace gie { namespace sbdec {
         struct parser_tag {};
 
 
+        template <class Parser> struct parser_t;
+
+        template <class Parser>
+        auto parser(Parser&& parser){
+            return parser_t<Parser>(std::forward<Parser>(parser));
+        }
+
         template <class Parser>
         struct parser_t : parser_tag {
             parser_t(Parser&& parser) : m_parser (std::forward<Parser>(parser))
@@ -150,11 +157,6 @@ namespace gie { namespace sbdec {
                 return parser_t<parser_t<Parser> const&>(*this);
             }
         };
-
-        template <class Parser>
-        auto parser(Parser&& parser){
-            return parser_t<Parser>(std::forward<Parser>(parser));
-        }
 
         template <class Parser>
         auto ref(Parser const& parser){

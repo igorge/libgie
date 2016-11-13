@@ -42,7 +42,7 @@ namespace gie {
 
 	struct simple_caching_allocator {
 
-        friend class boost_test__simple_caching_allocator;
+        friend struct boost_test__simple_caching_allocator;
 
 		typedef void* pointer_type;
 
