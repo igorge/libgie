@@ -40,7 +40,7 @@ namespace gie { namespace sio2 {
             };
 
             struct uint16_le : integral_type {
-                using base_type = std::int_fast16_t;
+                using base_type = std::uint_fast16_t;
             };
 
 
