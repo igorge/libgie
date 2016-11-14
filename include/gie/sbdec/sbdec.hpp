@@ -99,7 +99,12 @@ namespace gie { namespace sbdec {
             template <class ReaderT>
             auto operator()(ReaderT& reader, context_scope const *const scope)const{
 
-                return hana::eval_if( hana::is_a<hana::tuple_tag, decltype(m_parser( reader, scope ))>,
+                using ret_type = decltype(m_parser( reader, scope ));
+
+                static_assert( !std::is_reference<ret_type>::value );
+                static_assert( !std::is_same<ret_type, void>::value );
+
+                return hana::eval_if( hana::is_a<hana::tuple_tag, ret_type>,
                                [&](auto _){return m_parser( reader, scope );},
                                [&](auto _){return hana::make_tuple(m_parser( reader, scope ) );}
                 );
