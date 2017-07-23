@@ -134,6 +134,7 @@ namespace gie {
 
         typedef boost::error_info< struct tag_error_code_einfo, boost::system::error_code> error_code_einfo;
         typedef boost::error_info< struct tag_str_einfo, std::string > error_str_einfo;
+		typedef boost::error_info< struct tag_int_einfo, int > error_int_einfo;
         typedef boost::error_info< struct tag_condition_check_expr_einfo, std::string > condition_check_expr_einfo;
         typedef boost::error_info< struct tag_bt_einfo, bt_t > bt_einfo;
 

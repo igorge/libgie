@@ -35,6 +35,11 @@ namespace gie {
 			assert( m_debug_cookie == cookie );
 		}
 
+
+		inline void assert_cookie_is_valid()const{
+			assert( m_debug_cookie == cookie );
+		}
+
 	private:
 		#ifndef NDEBUG
 		CookieType m_debug_cookie;

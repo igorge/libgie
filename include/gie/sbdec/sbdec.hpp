@@ -36,6 +36,7 @@ namespace gie { namespace sbdec {
             std::string const*   name;
         };
 
+        inline
         std::string make_scope(context_scope const * const scope){
             auto * current = scope;
 
