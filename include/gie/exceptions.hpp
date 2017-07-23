@@ -24,17 +24,22 @@
 //================================================================================================================================================
 #define GIE_LOC_INFO BOOST_CURRENT_FUNCTION, __FILE__, __LINE__
 
-#ifndef GIE_BUILD_RELEASE
-    #define GIE_THROW(x)                                               \
-	do {									\
-		try{								\
-			BOOST_THROW_EXCEPTION(x);				\
-		}catch(boost::exception const& e) {				\
-			::gie::exception::impl::generate_backtrace(e);           \
-			::gie::exception::impl::log_exception_invokation(e);	\
-			throw;							\
-		}								\
-	} while(false)								\
+#ifdef GIE_NO_THROW_TRACE
+    #define GIE_IMPL_LOG_EXCEPTION_INVOCATION(e) /**/
+#else
+    #define GIE_IMPL_LOG_EXCEPTION_INVOCATION(e) ::gie::exception::impl::log_exception_invokation(e)
+#endif
+
+    #define GIE_THROW(x)                                                \
+	do {									                            \
+		try{								                            \
+			BOOST_THROW_EXCEPTION(x);				                    \
+		}catch(boost::exception const& e) {				                \
+			::gie::exception::impl::generate_backtrace(e);              \
+            GIE_IMPL_LOG_EXCEPTION_INVOCATION(e);                       \
+			throw;							                            \
+		}								                                \
+	} while(false)								                        \
 	/**/
 
 	#define GIE_THROW_EX(x, function, file, line)	\
@@ -51,10 +56,6 @@
 			}\
 		}while(false)
 		/**/
-#else
-    #error "not impl"
-    #define GIE_THROW(x) BOOST_THROW_EXCEPTION(x)
-#endif
 
 
 #define GIE_THROW_IF(cond, x) do {  if(cond) GIE_THROW(x); }while(false)

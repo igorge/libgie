@@ -20,9 +20,9 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvtable-verify=std")
     #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=thread")
 
-#    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
-#    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=undefined")
-#    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=float-cast-overflow")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=undefined")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=float-cast-overflow")
 #
 #    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-sanitize-recover")
 else()
@@ -60,7 +60,8 @@ set(TESTS_SOURCES
     "tests/ut_simple_caching_allocator.cpp"
     "tests/ut_simple_lru.cpp"
     "tests/ut_caching_istream_iterator.cpp"
-    "tests/ut_sbdec01.cpp")
+    "tests/ut_sbdec01.cpp"
+    "tests/ut_simple_ring_buffer.cpp")
     
 find_package (Boost COMPONENTS unit_test_framework system date_time REQUIRED)
     
