@@ -188,7 +188,7 @@ namespace gie { namespace sbdec {
 
                     return hana::concat( std::move(v1), std::move(v2) );
                 });
-            };
+            }
 
 
             template <class T>
@@ -214,12 +214,12 @@ namespace gie { namespace sbdec {
         template <class P1, class P2>
         auto operator >> (parser_t<P1> && p1, P2&&p2){
             return impl::make_sequence(std::move(p1), std::move(p2));
-        };
+        }
 
         template <class P1, class P2>
         auto operator >> (parser_t<P1> const& p1, P2 const& p2){
             return impl::make_sequence(p1, p2);
-        };
+        }
 
 
         template <class Parser>

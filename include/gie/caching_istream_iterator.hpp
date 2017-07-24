@@ -230,7 +230,7 @@ namespace gie {
         caching_istream_iterator_t(AnyCompatibleAllocator && p_allocator, std::istream& is, size_t const p_page_size, page_count_t const p_cache_page_count)
                 : m_impl(make_shared_(std::forward<AnyCompatibleAllocator>(p_allocator), is, p_page_size, p_cache_page_count) )
         {
-        };
+        }
 
 
         bool equal(self_type const& other)const{

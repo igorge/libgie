@@ -128,7 +128,7 @@ namespace gie {
         template <class TT, class... Args>
         TT* alloc_(Args&& ...args)const{
             return gie::construct_new<TT>(*this, std::forward<Args>(args)...);
-        };
+        }
 
         template <class TT>
         void dealloc_(TT* const p)const {
@@ -185,12 +185,12 @@ namespace gie {
     template <class T, class U, class SimpleAllocatorT>
     bool operator==(const simple_to_std_aligned_allocator_t<T, SimpleAllocatorT>& l, const simple_to_std_aligned_allocator_t<U, SimpleAllocatorT>& r){
         return static_cast<void*>(&l.m_simple_allocator) == static_cast<void*>(&r.m_simple_allocator);
-    };
+    }
 
     template <class T, class U, class SimpleAllocatorT>
     bool operator!=(const simple_to_std_aligned_allocator_t<T, SimpleAllocatorT>& l, const simple_to_std_aligned_allocator_t<U, SimpleAllocatorT>& r){
         return static_cast<void*>(&l.m_simple_allocator) != static_cast<void*>(&r.m_simple_allocator);
-    };
+    }
 
 }
 //================================================================================================================================================

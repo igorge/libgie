@@ -42,20 +42,20 @@
 	} while(false)								                        \
 	/**/
 
-	#define GIE_THROW_EX(x, function, file, line)	\
-		do{ \
-			try{\
-				::boost::throw_exception( ::boost::enable_error_info(x) <<\
-						::boost::throw_function(function) <<\
-						::boost::throw_file(file) <<\
-						::boost::throw_line((int)line) );\
-			}catch(boost::exception const& e){	\
-				::gie::exception::impl::generate_backtrace(e);           \
-				::gie::exception::impl::log_exception_invokation(e);	\
-				throw;\
-			}\
-		}while(false)
-		/**/
+	#define GIE_THROW_EX(x, function, file, line)	                        \
+    do{                                                                     \
+			try{                                                            \
+				::boost::throw_exception( ::boost::enable_error_info(x) <<  \
+						::boost::throw_function(function) <<                \
+						::boost::throw_file(file) <<                        \
+						::boost::throw_line((int)line) );                   \
+			}catch(boost::exception const& e){	                            \
+				::gie::exception::impl::generate_backtrace(e);              \
+				GIE_IMPL_LOG_EXCEPTION_INVOCATION(e);	                    \
+				throw;                                                      \
+			}                                                               \
+	}while(false)
+    /**/
 
 
 #define GIE_THROW_IF(cond, x) do {  if(cond) GIE_THROW(x); }while(false)

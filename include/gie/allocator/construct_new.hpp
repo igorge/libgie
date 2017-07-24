@@ -26,7 +26,7 @@ namespace gie {
         }
 
         return ptr;
-    };
+    }
 
 
     template <class T, class AllocatorT, class... Args>
@@ -34,7 +34,7 @@ namespace gie {
         typedef typename std::allocator_traits<AllocatorT>::template rebind_alloc<T> rebound_allocator_t;
         rebound_allocator_t rebound_allocator{alloc};
         return construct_new<T>(rebound_allocator, std::forward<Args>(args)... );
-    };
+    }
 
 
     template <class T, class AllocatorT>

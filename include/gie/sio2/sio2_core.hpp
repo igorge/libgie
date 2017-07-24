@@ -154,7 +154,7 @@ namespace gie { namespace sio2 {
             typename std::enable_if< gie::bits_count<T>() <= bits_count, T>::type // nothing to pad
             pad_high_bits_with_one(T const& v){
                 return v;
-            };
+            }
 
             template <unsigned int bits_count, class T>
             typename std::enable_if< (gie::bits_count<T>() > bits_count), T>::type
@@ -168,7 +168,7 @@ namespace gie { namespace sio2 {
                 static_assert (bits_count < gie::bits_count<T>());
 
                 return { ((std::numeric_limits<T>::max() >> bits_count) << bits_count) | v };
-            };
+            }
 
         }
 
@@ -257,7 +257,7 @@ namespace gie { namespace sio2 {
             T const o2 = read_stream.read();
 
             v.value =  ( o1 | (o2<<8) );
-        };
+        }
 
 
         // out -- int16_le
@@ -293,7 +293,7 @@ namespace gie { namespace sio2 {
                 v.value = ( o1 | (o2<<8) );
             }
 
-        };
+        }
 
 
 
@@ -324,7 +324,7 @@ namespace gie { namespace sio2 {
             T const o4 = read_stream.read();
 
             v.value =  ( o1 | (o2<<8) | (o3<<16) | (o4<<24) );
-        };
+        }
 
 
         // out -- int32_le
@@ -362,7 +362,7 @@ namespace gie { namespace sio2 {
                v.value = ( o1 | (o2<<8) | (o3<<16) | (o4<<24) );
             }
 
-        };
+        }
 
 
 

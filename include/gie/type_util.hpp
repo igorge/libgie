@@ -22,7 +22,7 @@ namespace gie {
         static_assert( std::is_integral<U>::value );
         static_assert( std::numeric_limits<T>::radix == std::numeric_limits<U>::radix );
         return true;
-    };
+    }
 
 
     //return number of bits in a T (including sign)
