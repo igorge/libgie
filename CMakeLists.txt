@@ -9,26 +9,30 @@ set(proj_binary_name libgie)
 #set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -Wextra -Wno-deprecated -Wno-unused-parameter")
+#add_definitions(-DGIE_NO_THROW_TRACE)
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -Wall -Wextra -pedantic -Wno-deprecated -Wno-unused-parameter")
 
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     message("*** Debug build. ***")
-    add_definitions(-DBOOST_MULTI_INDEX_ENABLE_SAFE_MODE)
-    add_definitions(-DBOOST_MULTI_INDEX_ENABLE_INVARIANT_CHECKING)
+#    add_definitions(-DBOOST_MULTI_INDEX_ENABLE_SAFE_MODE)
+#    add_definitions(-DBOOST_MULTI_INDEX_ENABLE_INVARIANT_CHECKING)
 
-    #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvtable-verify=std")
-    #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=thread")
+#    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvtable-verify=std")
+#    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=thread")
 
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=undefined")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=float-cast-overflow")
+#    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
+#    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=undefined")
+#    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=float-cast-overflow")
 #
 #    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-sanitize-recover")
 else()
 #  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -finline-functions -findirect-inlining")
 #  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -flto")
 endif ()
+
+
 
 set(SOURCE_FILES
     "src/exceptions.cpp")
@@ -60,8 +64,7 @@ set(TESTS_SOURCES
     "tests/ut_simple_caching_allocator.cpp"
     "tests/ut_simple_lru.cpp"
     "tests/ut_caching_istream_iterator.cpp"
-    "tests/ut_sbdec01.cpp"
-    "tests/ut_simple_ring_buffer.cpp")
+    "tests/ut_sbdec01.cpp")
     
 find_package (Boost COMPONENTS unit_test_framework system date_time REQUIRED)
     
