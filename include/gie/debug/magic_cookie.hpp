@@ -19,30 +19,32 @@ namespace gie {
 	struct cookie_checker {
 		cookie_checker()
 			#ifndef NDEBUG
-			: m_debug_cookie( cookie )
+			    : m_debug_cookie( cookie )
 			#endif
 		{
-			this->is_cookie_valid();
+			is_cookie_valid();
 		}
 		~cookie_checker(){
 			#ifndef NDEBUG
-			this->is_cookie_valid();
-			m_debug_cookie=(CookieType)-1;
+			    is_cookie_valid();
+			    m_debug_cookie=(CookieType)-1;
 			#endif
 		}
 
 		inline void is_cookie_valid(){
-			assert( m_debug_cookie == cookie );
+			assert_cookie_is_valid();
 		}
 
 
 		inline void assert_cookie_is_valid()const{
-			assert( m_debug_cookie == cookie );
+            #ifndef NDEBUG
+			    assert( m_debug_cookie == cookie );
+            #endif
 		}
 
 	private:
 		#ifndef NDEBUG
-		CookieType m_debug_cookie;
+		    CookieType m_debug_cookie;
 		#endif
 	};
 
