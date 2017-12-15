@@ -15,6 +15,14 @@
 //================================================================================================================================================
 namespace gie {
 
+    struct simple_default_allocator {
+        void* allocate(std::size_t const size)const {
+            return new char[size];
+        }
+        void deallocate(void* const pointer, size_t const size)const noexcept{
+            delete[] static_cast<char*>(pointer);
+        }
+    };
 
     template <class SimpleAllocatorT>
     struct simple_allocator_by_ref_wrapper_t{
@@ -38,6 +46,37 @@ namespace gie {
     template <class SimpleAllocatorT>
     simple_allocator_by_ref_wrapper_t<SimpleAllocatorT>
     make_ref_wrapper(SimpleAllocatorT& allocator){ return simple_allocator_by_ref_wrapper_t<SimpleAllocatorT>(allocator); }
+
+    struct simple_allocator_i {
+
+        simple_allocator_i() = default;
+        simple_allocator_i(simple_allocator_i const&) = delete;
+
+        virtual void* allocate(std::size_t const size) = 0;
+        virtual void deallocate(void* const pointer, size_t const size) noexcept = 0;
+    };
+
+
+    template <class SimpleAllocatorT>
+    struct simple_allocator_to_i_adapter_t : simple_allocator_i {
+
+        template <typename ... ARGS>
+        explicit simple_allocator_to_i_adapter_t(ARGS ... args)
+                :m_allocator( std::forward<ARGS>(args) ... )
+        {
+        }
+
+        void* allocate(std::size_t const size) override {
+            return m_allocator.allocate(size);
+        }
+
+        void deallocate(void* const pointer, size_t const size) noexcept override {
+            return m_allocator.deallocate(pointer, size);
+        }
+
+
+        SimpleAllocatorT m_allocator;
+    };
 
 
 	struct simple_caching_allocator {
