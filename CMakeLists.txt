@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.9)
 project(libgie)
 #set(CMAKE_VERBOSE_MAKEFILE ON)
 
-set(proj_binary_name libgie)
+set(BINARY_NAME libgie)
 
 
 #set(CMAKE_CXX_STANDARD 17)
@@ -37,10 +37,7 @@ endif ()
 set(SOURCE_FILES
     "src/exceptions.cpp")
 
-### UT
-add_definitions(-DBOOST_TEST_DYN_LINK)
-###
-   	
+
 if(QT4_FOUND)
     message("Configuring Qt support for libgie")
     set(proj_headers include/gie/qt/qt_helper.hpp)
@@ -68,14 +65,19 @@ set(TESTS_SOURCES
     
 find_package (Boost COMPONENTS unit_test_framework system date_time REQUIRED)
     
-set(TEST test_${proj_binary_name})
+set(TEST test_${BINARY_NAME})
 add_executable (${TEST} ${TESTS_SOURCES})
-target_link_libraries (${TEST} ${proj_binary_name} ${Boost_LIBRARIES})
+target_compile_definitions(${TEST} PRIVATE -DBOOST_TEST_DYN_LINK)
+target_link_libraries (${TEST} PRIVATE ${BINARY_NAME} Boost::unit_test_framework Boost::date_time Boost::system)
 enable_testing()
 add_test (${TEST} ${TEST})
 ###
 
 
-include_directories(${Boost_INCLUDE_DIRS} ${PROJECT_SOURCE_DIR}/include)
-add_library(${proj_binary_name} ${SOURCE_FILES} ${proj_headers_moc})
-target_link_libraries(${proj_binary_name} ${QT_LIBRARIES})
+add_library(${BINARY_NAME} ${SOURCE_FILES} ${proj_headers_moc})
+
+target_include_directories(${BINARY_NAME} PUBLIC ${PROJECT_SOURCE_DIR}/include)
+#target_include_directories(${BINARY_NAME} PRIVATE ${Boost_INCLUDE_DIRS})
+
+
+target_link_libraries(${BINARY_NAME} PRIVATE ${QT_LIBRARIES})
