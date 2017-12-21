@@ -12,6 +12,7 @@ set(BINARY_NAME libgie)
 #add_definitions(-DGIE_NO_THROW_TRACE)
 
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -Wall -Wextra -pedantic -Wno-deprecated -Wno-unused-parameter")
+set(Boost_DETAILED_FAILURE_MSG ON)
 
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
@@ -63,12 +64,12 @@ set(TESTS_SOURCES
     "tests/ut_caching_istream_iterator.cpp"
     "tests/ut_sbdec01.cpp")
     
-find_package (Boost COMPONENTS unit_test_framework system date_time REQUIRED)
+find_package (Boost REQUIRED COMPONENTS unit_test_framework system date_time)
     
 set(TEST test_${BINARY_NAME})
 add_executable (${TEST} ${TESTS_SOURCES})
 target_compile_definitions(${TEST} PRIVATE -DBOOST_TEST_DYN_LINK)
-target_link_libraries (${TEST} PRIVATE ${BINARY_NAME} Boost::unit_test_framework Boost::date_time Boost::system)
+target_link_libraries (${TEST} PRIVATE ${BINARY_NAME} ${Boost_LIBRARIES})
 enable_testing()
 add_test (${TEST} ${TEST})
 ###
@@ -76,8 +77,25 @@ add_test (${TEST} ${TEST})
 
 add_library(${BINARY_NAME} ${SOURCE_FILES} ${proj_headers_moc})
 
+define_property(
+        TARGET PROPERTY GIE_CONF_USE_G3LOG
+        BRIEF_DOCS "use g3log as backend"
+        FULL_DOCS "use g3log as backend")
+
 target_include_directories(${BINARY_NAME} PUBLIC ${PROJECT_SOURCE_DIR}/include)
 #target_include_directories(${BINARY_NAME} PRIVATE ${Boost_INCLUDE_DIRS})
 
+if (GIE_CONF_USE_G3LOG)
+    message("CONF: Using g3log backend for logging")
 
-target_link_libraries(${BINARY_NAME} PRIVATE ${QT_LIBRARIES})
+    find_package(g3logger)
+
+    target_compile_definitions(${BINARY_NAME} PUBLIC GIE_CONF_USE_G3LOG)
+    target_sources(${BINARY_NAME} PRIVATE src/logger_g3log.cpp src/logger_g3log.hpp)
+    target_link_libraries(${BINARY_NAME} PRIVATE g3logger)
+endif()
+
+
+
+
+target_link_libraries(${BINARY_NAME} PRIVATE ${QT_LIBRARIES} ${Boost_LIBRARIES})

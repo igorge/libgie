@@ -14,8 +14,8 @@
 #include <boost/preprocessor/cat.hpp>
 //================================================================================================================================================
 #ifndef GIE_CONF_DISABLE_DEBUG_LOG
-	#define GIE_DEBUG_LOG_EXT(x, file, line)  GIE_LOG_EXT("DEBUG: " << x, file, line)
-	#define GIE_DEBUG_LOG(x)  GIE_LOG("DEBUG: " << x)
+	#define GIE_DEBUG_LOG_STD_ERR_EXT(x, file, line)  GIE_LOG_STDERR_EXT("DEBUG: " << x, file, line)
+	#define GIE_DEBUG_LOG(x)  GIE_DEBUG_LOG_BACKEND(x)
 	#define GIE_DEBUG_IF_LOG(cond,x) do { if(cond){ GIE_DEBUG_LOG(x); }  }while(false)
 	#define GIE_DEBUG_TRACE() GIE_DEBUG_LOG( BOOST_CURRENT_FUNCTION )
 	#define GIE_DEBUG_TRACE1(x) GIE_DEBUG_LOG( BOOST_CURRENT_FUNCTION << " : "<< x)
@@ -38,12 +38,12 @@ namespace gie { namespace debug {
 			, m_line( line )
 			, m_func( func )
 		{
-			GIE_DEBUG_LOG_EXT("enter> "<<m_func, m_file, m_line);
+			GIE_DEBUG_LOG_STD_ERR_EXT("enter> "<<m_func, m_file, m_line);
 		}
 
 		~tracer()
         {
-			GIE_DEBUG_LOG_EXT("<exit  "<<m_func, m_file, m_line);
+			GIE_DEBUG_LOG_STD_ERR_EXT("<exit  "<<m_func, m_file, m_line);
 		}
 	private:
 		char const * const m_file;

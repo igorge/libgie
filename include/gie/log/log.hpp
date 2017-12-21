@@ -8,6 +8,25 @@
 //================================================================================================================================================
 #pragma once
 //================================================================================================================================================
+
+#if defined(GIE_CONF_USE_BOOSTLOG)
+    #include <boost/log/trivial.hpp>
+
+    #define GIE_LOG_BACKEND(x) BOOST_LOG_TRIVIAL(info) << x
+    #define GIE_DEBUG_LOG_BACKEND(x) BOOST_LOG_TRIVIAL(debug) << x
+#elif defined(GIE_CONF_USE_G3LOG)
+    #include <g3log/g3log.hpp>
+
+    #define GIE_LOG_BACKEND(x) LOG(INFO) << x
+    #define GIE_DEBUG_LOG_BACKEND(x) LOG(DEBUG) << x
+
+#else
+    #define GIE_LOG_BACKEND(x) GIE_LOG_SIMPLE(x)
+    #define GIE_DEBUG_LOG_BACKEND(x) GIE_LOG("DEBUG: " << x)
+#endif
+//================================================================================================================================================
+
+
 #include <boost/current_function.hpp>
 
 #include <sstream>
@@ -47,6 +66,7 @@
 //================================================================================================================================================
 #ifdef GIE_LOGGER_NEED_TLS
 namespace gie { namespace logger { namespace impl {
+
 	struct per_thread_info_t {
 		size_t const m_magic;
 
@@ -115,7 +135,7 @@ namespace gie { namespace logger { namespace impl {
 	#define GIE_LOG_CLOSE_TAG "]**!>]"
 #endif
 
-#define GIE_LOG_EXT(msg, file, line)  \
+#define GIE_LOG_STDERR_EXT(msg, file, line)  \
         do{ try {               \
                 std::ostringstream ostr;        \
                 ::gie::logger::impl::ostream_wrapper_t(ostr) << "LOG: " << GIE_IMPL_LOGGER_LOG_TIME GIE_IMPL_LOGGER_LOG_TID  "["<<file<<":"<<line<<"] " << GIE_LOG_OPEN_TAG <<  msg << GIE_LOG_CLOSE_TAG << "\n"; \
@@ -125,7 +145,8 @@ namespace gie { namespace logger { namespace impl {
         } while(false) \
         /**/
 
-#define GIE_LOG(msg) GIE_LOG_EXT(msg, __FILE__, __LINE__)
+#define GIE_LOG_SIMPLE(msg) GIE_LOG_STDERR_EXT(msg, __FILE__, __LINE__)
+#define GIE_LOG(x) GIE_LOG_BACKEND(x)
 
 namespace gie { namespace debug {
 
@@ -133,6 +154,12 @@ namespace gie { namespace debug {
         assert(false);
     }
     
+} }
+
+
+namespace gie { namespace logger {
+
+        std::shared_ptr<void> init_logging_to_stderr();
 } }
 //================================================================================================================================================
 #endif
