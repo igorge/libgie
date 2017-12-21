@@ -18,7 +18,7 @@ namespace {
         void receive_log_message(g3::LogMessageMover &&message) {
             std::ostringstream ostr;
 
-            ostr << message.get().timestamp("%Y/%m/%d %H:%M:%S %f8 ")
+            ostr << message.get().timestamp("%Y/%m/%d %H:%M:%S %f6 ")
                  << std::hex << message.get()._call_thread_id
                  << ' ' << message.get().level()
                  << " [" << message.get()._file << ':' << std::dec << message.get()._line << "]["

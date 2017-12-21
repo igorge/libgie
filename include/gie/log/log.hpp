@@ -160,6 +160,14 @@ namespace gie { namespace debug {
 namespace gie { namespace logger {
 
         std::shared_ptr<void> init_logging_to_stderr();
+
+#if defined(GIE_CONF_USE_BOOSTLOG)
+#elif defined(GIE_CONF_USE_G3LOG)
+#else
+        inline std::shared_ptr<void> init_logging_to_stderr(){ return std::shared_ptr<void>(nullptr); }
+#endif
+
+
 } }
 //================================================================================================================================================
 #endif
