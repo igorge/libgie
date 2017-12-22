@@ -19,10 +19,15 @@
 
     #define GIE_LOG_BACKEND(x) LOG(INFO) << x
     #define GIE_DEBUG_LOG_BACKEND(x) LOG(DEBUG) << x
-
+    #define GIE_INFO_LOG_BACKEND(x) LOG(INFO) << x
+    #define GIE_WARNING_LOG_BACKEND(x) LOG(WARN) << x
+    #define GIE_TRACE_LOG_BACKEND(x) LOG(TRACE) << x
 #else
     #define GIE_LOG_BACKEND(x) GIE_LOG_SIMPLE(x)
-    #define GIE_DEBUG_LOG_BACKEND(x) GIE_LOG("DEBUG: " << x)
+    #define GIE_DEBUG_LOG_BACKEND(x) GIE_LOG_SIMPLE("DEBUG: " << x)
+    #define GIE_INFO_LOG_BACKEND(x) GIE_LOG_SIMPLE("INFO: " << x)
+    #define GIE_WARNING_LOG_BACKEND(x) GIE_LOG_SIMPLE("WARN: " << x)
+    #define GIE_TRACE_LOG_BACKEND(x) GIE_LOG_SIMPLE("TRACE: " << x)
 #endif
 //================================================================================================================================================
 
@@ -146,7 +151,12 @@ namespace gie { namespace logger { namespace impl {
         /**/
 
 #define GIE_LOG_SIMPLE(msg) GIE_LOG_STDERR_EXT(msg, __FILE__, __LINE__)
-#define GIE_LOG(x) GIE_LOG_BACKEND(x)
+
+#define GIE_LOG(x)          GIE_LOG_BACKEND(x)
+#define GIE_LOG_INFO(x)     GIE_INFO_LOG_BACKEND(x)
+#define GIE_LOG_WARN(x)     GIE_WARNING_LOG_BACKEND(x)
+#define GIE_LOG_TRACE(x)    GIE_TRACE_LOG_BACKEND(x)
+
 
 namespace gie { namespace debug {
 

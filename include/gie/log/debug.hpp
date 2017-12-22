@@ -16,6 +16,7 @@
 #ifndef GIE_CONF_DISABLE_DEBUG_LOG
 	#define GIE_DEBUG_LOG_STD_ERR_EXT(x, file, line)  GIE_LOG_STDERR_EXT("DEBUG: " << x, file, line)
 	#define GIE_DEBUG_LOG(x)  GIE_DEBUG_LOG_BACKEND(x)
+	#define GIE_LOG_DEBUG(x)  GIE_DEBUG_LOG_BACKEND(x)
 	#define GIE_DEBUG_IF_LOG(cond,x) do { if(cond){ GIE_DEBUG_LOG(x); }  }while(false)
 	#define GIE_DEBUG_TRACE() GIE_DEBUG_LOG( BOOST_CURRENT_FUNCTION )
 	#define GIE_DEBUG_TRACE1(x) GIE_DEBUG_LOG( BOOST_CURRENT_FUNCTION << " : "<< x)
@@ -23,6 +24,7 @@
 	#define GIE_DEBUG_TRACE_INOUT() ::gie::debug::tracer BOOST_PP_CAT(sg__stcrypt__, __COUNTER__) (__FILE__, __LINE__, BOOST_CURRENT_FUNCTION)
 #else
 	#define GIE_DEBUG_LOG(x) 			((void)0)
+	#define GIE_LOG_DEBUG(x)  			((void)0)
 	#define GIE_DEBUG_IF_LOG(cond,x) 	((void)0)
 	#define GIE_DEBUG_TRACE() 			((void)0)
 	#define GIE_DEBUG_TRACE1(x) 		((void)0)
